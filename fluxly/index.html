@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluxly App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:transparent;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.wrap{display:flex;gap:32px;align-items:flex-start;padding:32px;}
+.phone-frame{width:390px;height:844px;background:#F7F4EF;border-radius:50px;overflow:hidden;box-shadow:0 48px 120px rgba(0,0,0,0.28),0 0 0 12px #1C1A17,inset 0 0 0 1.5px #3A3835;position:relative;display:flex;flex-direction:column;flex-shrink:0;}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 8px;font-size:12px;font-weight:600;color:#1A1A18;flex-shrink:0;}
+.status-icons{display:flex;gap:5px;align-items:center;font-size:11px;}
+.screen-container{flex:1;position:relative;overflow:hidden;}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;background:#F7F4EF;padding-bottom:88px;scrollbar-width:none;}
+.screen::-webkit-scrollbar{display:none;}
+.screen.active{display:flex;}
+.bottom-nav{height:84px;background:#fff;border-top:1px solid #EAE5DC;display:flex;align-items:center;justify-content:space-around;padding:0 12px 14px;flex-shrink:0;position:relative;z-index:10;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 10px;border-radius:14px;transition:background .15s;flex:1;}
+.nav-item:hover{background:#F0EBE2;}
+.nav-icon{font-size:19px;color:#C0BAB0;}
+.nav-label{font-size:10px;font-weight:500;color:#C0BAB0;}
+.nav-item.active .nav-icon,.nav-item.active .nav-label{color:#C4622D;}
+.nav-fab{width:54px;height:54px;border-radius:50%;background:#C4622D;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;cursor:pointer;box-shadow:0 6px 20px rgba(196,98,45,.45);margin-top:-22px;flex-shrink:0;transition:transform .15s;}
+.nav-fab:hover{transform:scale(1.06);}
+.card{background:#fff;border-radius:18px;margin:0 16px 12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.sec-ttl{font-size:13px;font-weight:600;color:#1A1A18;letter-spacing:.01em;}
+.sec-lnk{font-size:12px;color:#C4622D;font-weight:500;cursor:pointer;}
+
+/* HOME */
+.home-top{padding:6px 20px 14px;}
+.home-sub{font-size:11px;font-weight:500;color:#9A9590;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
+.home-row{display:flex;justify-content:space-between;align-items:center;}
+.home-name{font-family:'Playfair Display',serif;font-size:23px;font-weight:600;color:#1A1A18;}
+.bell{width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid #EAE5DC;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;position:relative;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#E24B4A;position:absolute;top:0;right:0;border:2px solid #F7F4EF;}
+.focus-bar{background:linear-gradient(135deg,#C4622D 0%,#9B4A22 100%);border-radius:16px;padding:14px 16px;margin:0 16px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.fb-icon{font-size:22px;}
+.fb-text{flex:1;}
+.fb-title{font-size:13px;font-weight:600;color:#fff;}
+.fb-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;}
+.fb-time{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;color:#fff;}
+.task-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0EBE2;cursor:pointer;}
+.task-item:last-child{border-bottom:none;}
+.task-chk{width:21px;height:21px;border-radius:50%;border:2px solid #D0CCC4;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all .2s;}
+.task-chk.done{border-color:#0F6E56;background:#0F6E56;color:#fff;}
+.task-info{flex:1;}
+.task-nm{font-size:14px;font-weight:500;color:#1A1A18;margin-bottom:1px;}
+.task-nm.done{text-decoration:line-through;color:#B8B3AA;}
+.task-mt{font-size:11px;color:#B8B3AA;}
+.task-pct{font-size:12px;font-weight:600;}
+.pri-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0EBE2;}
+.pri-item:last-child{border-bottom:none;}
+.pri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ph{background:#E24B4A;}.pm{background:#EF9F27;}.pl{background:#1D9E75;}
+.pri-info{flex:1;}
+.pri-nm{font-size:13px;font-weight:500;color:#1A1A18;}
+.pri-dt{font-size:11px;color:#B8B3AA;}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;}
+.badge-r{background:#FCEBEB;color:#A32D2D;}.badge-a{background:#FAEEDA;color:#633806;}.badge-g{background:#EAF3DE;color:#3B6D11;}
+.cal-strip{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px 0;}
+.cal-strip::-webkit-scrollbar{display:none;}
+.cal-day{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:42px;padding:8px 4px;border-radius:14px;cursor:pointer;transition:background .15s;}
+.cal-day:hover{background:#F0EBE2;}
+.cal-day.today{background:#C4622D;}
+.cal-dn{font-size:10px;font-weight:500;color:#9A9590;text-transform:uppercase;letter-spacing:.04em;}
+.cal-day.today .cal-dn{color:rgba(255,255,255,.75);}
+.cal-num{font-size:15px;font-weight:600;color:#1A1A18;}
+.cal-day.today .cal-num{color:#fff;}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:#C4622D;}
+.cal-day.today .cal-dot{background:rgba(255,255,255,.55);}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.stat-box{background:#F7F4EF;border-radius:12px;padding:12px;text-align:center;}
+.stat-v{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#C4622D;}
+.stat-l{font-size:10px;color:#9A9590;font-weight:500;margin-top:2px;line-height:1.3;}
+
+/* FOCUS */
+.focus-wrap{display:flex;flex-direction:column;align-items:center;padding:16px 24px;gap:14px;}
+.focus-status{font-size:11px;font-weight:500;color:#9A9590;display:flex;align-items:center;gap:5px;}
+.focus-status-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;}
+.focus-status-dot.idle{background:#D0CCC4;}
+.preset-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;}
+.preset-btn{display:flex;flex-direction:column;align-items:center;padding:10px 6px;border-radius:12px;border:1.5px solid #EAE5DC;background:#fff;cursor:pointer;transition:all .15s;}
+.preset-btn.active{background:#C4622D;border-color:#C4622D;}
+.preset-btn .pb-min{font-size:13px;font-weight:700;color:#1A1A18;}
+.preset-btn.active .pb-min{color:#fff;}
+.preset-btn .pb-lbl{font-size:9px;font-weight:500;color:#C0BAB0;margin-top:2px;}
+.preset-btn.active .pb-lbl{color:rgba(255,255,255,.7);}
+.noise-scroll{display:flex;gap:8px;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none;}
+.noise-scroll::-webkit-scrollbar{display:none;}
+.noise-card{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px;padding:12px 8px;border-radius:14px;border:1.5px solid #EAE5DC;background:#fff;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.noise-card.active{background:#FEF6EF;border-color:#C4622D;}
+.noise-card span:first-child{font-size:22px;}
+.noise-card .nc-lbl{font-size:10px;font-weight:500;color:#9A9590;}
+.noise-card.active .nc-lbl{color:#C4622D;}
+.view-tabs{display:flex;gap:0;margin:0 16px 10px;border-bottom:1.5px solid #EAE5DC;}
+.vtab{font-size:13px;font-weight:500;color:#9A9590;padding:8px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;}
+.vtab.active{color:#C4622D;border-bottom-color:#C4622D;}
+.kanban-board{display:flex;gap:10px;padding:0 16px;overflow-x:auto;scrollbar-width:none;}
+.kanban-board::-webkit-scrollbar{display:none;}
+.kanban-col{min-width:152px;flex-shrink:0;}
+.kanban-col-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:0 2px;}
+.kch-dot{width:8px;height:8px;border-radius:50%;}
+.kch-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.kch-count{font-size:10px;color:#B8B3AA;margin-left:auto;}
+.kanban-area{min-height:80px;border-radius:12px;padding:8px;}
+.kanban-task{background:#fff;border-radius:10px;padding:10px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.kt-name{font-size:12px;font-weight:500;color:#1A1A18;margin-bottom:4px;}
+.kt-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;}
+.kt-high{background:#FCEBEB;color:#A32D2D;}
+.kt-med{background:#FAEEDA;color:#633806;}
+.kt-low{background:#EAF3DE;color:#3B6D11;}
+.summary-banner{margin:0 16px 12px;padding:13px 16px;background:linear-gradient(135deg,#1A1A18 0%,#2E2B25 100%);border-radius:16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.sb-icon{font-size:20px;}
+.sb-text{flex:1;}
+.sb-title{font-size:12px;font-weight:600;color:#fff;}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:1px;}
+.sb-ring{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-inner{width:24px;height:24px;border-radius:50%;background:#1A1A18;display:flex;align-items:center;justify-content:center;}
+.sb-pct{font-size:8px;font-weight:700;color:#fff;}
+.summary-modal{position:absolute;inset:0;background:rgba(27,25,22,.72);display:flex;align-items:flex-end;z-index:200;}
+.summary-modal.hidden{display:none;}
+.summary-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-height:85%;overflow-y:auto;scrollbar-width:none;}
+.summary-handle{width:36px;height:4px;background:#EAE5DC;border-radius:99px;margin:0 auto 1.25rem;}
+.summary-date{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#9A9590;margin-bottom:.3rem;}
+.summary-headline{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#1A1A18;margin-bottom:1rem;}
+.summary-ring-row{display:flex;align-items:center;gap:16px;background:#F7F4EF;border-radius:16px;padding:14px;margin-bottom:1rem;}
+.summary-ring{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.summary-ring-inner{width:50px;height:50px;border-radius:50%;background:#F7F4EF;display:flex;align-items:center;justify-content:center;}
+.summary-ring-pct{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:#1A1A18;}
+.summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;}
+.ss-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;}
+.ss-lbl{font-size:11px;color:#9A9590;}
+.sm-label{font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sm-task{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #F0EBE2;}
+.sm-task:last-child{border-bottom:none;}
+.sm-task-name{font-size:13px;color:#1A1A18;flex:1;}
+.sm-done-name{font-size:13px;text-decoration:line-through;color:#B8B3AA;flex:1;}
+.sm-btn-row{display:flex;gap:10px;margin-top:1rem;}
+.sm-btn{flex:1;padding:14px;border-radius:14px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;}
+.sm-primary{background:#C4622D;color:#fff;}
+.sm-ghost{background:#F7F4EF;color:#1A1A18;border:1px solid #EAE5DC;}
+.proj-bar-row{margin-bottom:10px;}
+.pbr-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.pbr-name{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#1A1A18;}
+.pbr-dot{width:8px;height:8px;border-radius:50%;}
+.pbr-count{font-size:11px;color:#9A9590;}
+.pbr-track{height:6px;background:#F0EBE2;border-radius:99px;overflow:hidden;}
+.pbr-fill{height:100%;border-radius:99px;}
+.foc-lbl{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#9A9590;}
+.sel-task{width:100%;background:#fff;border:1.5px solid #EAE5DC;border-radius:14px;padding:13px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:#B8B3AA;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s;}
+.sel-task:focus-within,.sel-task:hover{border-color:#C4622D;}
+.timer-ring{width:220px;height:220px;border-radius:50%;background:conic-gradient(#C4622D 0deg, #C4622D var(--p,0deg), #EAE5DC var(--p,0deg));display:flex;align-items:center;justify-content:center;}
+.timer-inner{width:184px;height:184px;border-radius:50%;background:#F7F4EF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+.timer-display{font-family:'Playfair Display',serif;font-size:44px;font-weight:600;color:#1A1A18;letter-spacing:-2px;}
+.timer-sub{font-size:10px;color:#9A9590;font-weight:500;letter-spacing:.07em;}
+.timer-ctrls{display:flex;gap:16px;align-items:center;}
+.ctrl{width:50px;height:50px;border-radius:50%;background:#fff;border:1.5px solid #EAE5DC;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:background .15s;}
+.ctrl:hover{background:#F0EBE2;}
+.start{width:66px;height:66px;border-radius:50%;background:#C4622D;border:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(196,98,45,.35);transition:transform .15s;}
+.start:hover{transform:scale(1.05);}
+.noise-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;}
+.noise-btn{background:#fff;border:1.5px solid #EAE5DC;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;font-size:19px;}
+.noise-btn:hover{border-color:#C4622D;}
+.noise-btn.active{border-color:#C4622D;background:#FEF6EF;}
+.noise-lbl{font-size:9px;font-weight:500;color:#9A9590;margin-top:4px;display:block;letter-spacing:.04em;}
+.tog-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid #F0EBE2;}
+.tog-row:last-child{border-bottom:none;}
+.tog-lbl{font-size:14px;color:#1A1A18;}
+.toggle{width:44px;height:26px;border-radius:13px;background:#D4CFC7;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:#C4622D;}
+.toggle-thumb{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle.on .toggle-thumb{transform:translateX(18px);}
+
+/* ANALYTICS */
+.atabs{display:flex;background:#fff;border-radius:14px;padding:4px;margin:0 16px 12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.atab{flex:1;text-align:center;padding:9px;border-radius:11px;font-size:13px;font-weight:500;color:#9A9590;cursor:pointer;transition:all .15s;}
+.atab.active{background:#C4622D;color:#fff;}
+.met-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:12px;}
+.met-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.met-v{font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#1A1A18;}
+.met-l{font-size:11px;color:#9A9590;font-weight:500;margin-top:2px;}
+.met-c{font-size:11px;color:#0F6E56;font-weight:500;margin-top:5px;}
+.focus-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F0EBE2;}
+.focus-stat:last-child{border-bottom:none;}
+.fs-l{font-size:13px;color:#9A9590;}
+.fs-v{font-size:13px;font-weight:600;color:#1A1A18;}
+.ach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.ach{background:#F7F4EF;border-radius:12px;padding:12px 4px;text-align:center;}
+.ach-icon{font-size:22px;margin-bottom:4px;}
+.ach-nm{font-size:9px;font-weight:500;color:#9A9590;line-height:1.3;}
+.bar-wrap{display:flex;align-items:flex-end;gap:8px;height:80px;padding-top:8px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar{width:100%;background:#EAE5DC;border-radius:5px 5px 0 0;transition:height .3s;}
+.bar.active{background:#C4622D;}
+.bar.today{background:transparent;border:2px dashed #C4622D;}
+.bar-l{font-size:10px;color:#B8B3AA;}
+.bar-l.today{color:#C4622D;font-weight:600;}
+
+/* TASKS */
+.tasks-top{padding:6px 20px 12px;display:flex;justify-content:space-between;align-items:center;}
+.tasks-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#1A1A18;}
+.tasks-add{font-size:24px;cursor:pointer;color:#C4622D;}
+.ttabs{display:flex;margin:0 16px 12px;border-bottom:1.5px solid #EAE5DC;gap:20px;}
+.ttab{font-size:14px;font-weight:500;color:#9A9590;padding-bottom:10px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;}
+.ttab.active{color:#C4622D;border-bottom-color:#C4622D;}
+.tcard{background:#fff;border-radius:16px;padding:14px;margin:0 16px 10px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.tcard-chk{width:22px;height:22px;border-radius:6px;border:2px solid #D0CCC4;flex-shrink:0;margin-top:1px;cursor:pointer;transition:border-color .15s;}
+.tcard-chk:hover{border-color:#C4622D;}
+.tcard-info{flex:1;}
+.tcard-nm{font-size:14px;font-weight:500;color:#1A1A18;margin-bottom:3px;}
+.tcard-mt{font-size:11px;color:#B8B3AA;margin-bottom:6px;}
+.prog-bar{height:4px;background:#F0EBE2;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;background:#C4622D;border-radius:99px;}
+.prog-pct{font-size:11px;font-weight:600;color:#C4622D;margin-top:4px;}
+
+/* SETTINGS */
+.slist{background:#fff;border-radius:18px;margin:0 16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.sitem{display:flex;align-items:center;gap:14px;padding:15px 16px;border-bottom:1px solid #F0EBE2;cursor:pointer;transition:background .15s;}
+.sitem:last-child{border-bottom:none;}
+.sitem:hover{background:#FDFBF7;}
+.sicon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.io{background:#FEF0E7;}.ib{background:#E6F1FB;}.ip{background:#EEEDFE;}.ig{background:#EAF3DE;}.ir{background:#FCEBEB;}
+.stext{flex:1;}
+.slbl{font-size:14px;font-weight:500;color:#1A1A18;}
+.ssub{font-size:11px;color:#B8B3AA;margin-top:1px;}
+.sarr{font-size:15px;color:#C0BAB0;}
+
+/* SUB SCREENS */
+.screen-hdr{display:flex;align-items:center;gap:12px;padding:6px 20px 16px;}
+.back-btn{width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid #EAE5DC;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;}
+.screen-ttl{font-size:18px;font-weight:600;color:#1A1A18;}
+.fgrp{margin:0 16px 14px;}
+.flbl{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#9A9590;margin-bottom:6px;display:block;}
+.finp{width:100%;background:#fff;border:1.5px solid #EAE5DC;border-radius:13px;padding:13px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1A1A18;outline:none;transition:border-color .15s;}
+.finp:focus{border-color:#C4622D;}
+.finp::placeholder{color:#C0BAB0;}
+.ppills{display:flex;gap:8px;}
+.ppill{flex:1;text-align:center;padding:11px;border:1.5px solid #EAE5DC;border-radius:11px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.ppill.high{color:#A32D2D;}.ppill.high.sel{background:#FCEBEB;border-color:#E24B4A;}
+.ppill.med{color:#633806;}.ppill.med.sel{background:#FAEEDA;border-color:#EF9F27;}
+.ppill.low{color:#3B6D11;}.ppill.low.sel{background:#EAF3DE;border-color:#639922;}
+.sbtn{background:#C4622D;color:#fff;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;width:calc(100% - 32px);margin:8px 16px;cursor:pointer;box-shadow:0 4px 16px rgba(196,98,45,.3);transition:all .15s;}
+.sbtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(196,98,45,.35);}
+.lang-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #F0EBE2;cursor:pointer;transition:background .15s;}
+.lang-opt:last-child{border-bottom:none;}
+.lang-opt:hover{background:#FDFBF7;}
+.lang-flag{font-size:22px;}
+.lang-nm{font-size:14px;font-weight:500;color:#1A1A18;flex:1;}
+.lang-chk{color:#C4622D;font-size:16px;}
+.theme-opt{display:flex;align-items:center;gap:16px;padding:14px;border:2px solid #EAE5DC;border-radius:16px;margin:0 16px 10px;cursor:pointer;transition:border-color .15s;}
+.theme-opt.sel{border-color:#C4622D;}
+.theme-prev{width:54px;height:38px;border-radius:8px;flex-shrink:0;}
+.prev-l{background:linear-gradient(135deg,#F7F4EF 50%,#fff 50%);border:1px solid #EAE5DC;}
+.prev-d{background:linear-gradient(135deg,#1A1A18 50%,#2C2C2A 50%);}
+.prev-s{background:linear-gradient(135deg,#1A1A18 50%,#F7F4EF 50%);}
+.theme-nm{font-size:14px;font-weight:500;color:#1A1A18;flex:1;}
+.t-radio{width:20px;height:20px;border-radius:50%;border:2px solid #D0CCC4;display:flex;align-items:center;justify-content:center;}
+.t-radio.sel{border-color:#C4622D;}
+.t-rdot{width:10px;height:10px;border-radius:50%;background:#C4622D;display:none;}
+.t-radio.sel .t-rdot{display:block;}
+
+/* Profile page */
+.avatar-wrap{text-align:center;padding:8px 0 20px;}
+.avatar{width:74px;height:74px;border-radius:50%;background:#FEF0E7;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#C4622D;font-family:'Playfair Display',serif;margin:0 auto 8px;}
+.change-photo{font-size:12px;color:#C4622D;font-weight:500;cursor:pointer;}
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE — Warm Dark Palette  (bg:#1E1A17 / card:#2A2520)
+══════════════════════════════════════════════════════ */
+
+/* ── Phone frame ── */
+.phone-frame.dark-mode {
+  background:#1E1A17 !important;
+  box-shadow:0 48px 120px rgba(0,0,0,.45),0 0 0 12px #100E0C,inset 0 0 0 1.5px #3D3730;
+}
+
+/* ── All screens ── */
+.phone-frame.dark-mode .screen { background:#1E1A17 !important; color:#EDE5D8; }
+
+/* ── Status bar ── */
+.phone-frame.dark-mode .status-bar { color:#EDE5D8; }
+
+/* ── Bottom nav ── */
+.phone-frame.dark-mode .bottom-nav {
+  background:#252018 !important;
+  border-top-color:#3D3730 !important;
+}
+.phone-frame.dark-mode .nav-lbl { color:#6A6258 !important; }
+.phone-frame.dark-mode .nav-item.active .nav-lbl { color:#C4622D !important; }
+
+/* ── Screen headers ── */
+.phone-frame.dark-mode .screen-hdr {
+  background:#1E1A17 !important;
+  border-bottom:1px solid #3D3730 !important;
+}
+.phone-frame.dark-mode .back-btn {
+  background:#2A2520 !important;
+  border-color:#3D3730 !important;
+  color:#EDE5D8 !important;
+}
+.phone-frame.dark-mode .screen-ttl { color:#EDE5D8 !important; }
+
+/* ══ ALL CARD / SURFACE CLASSES → warm dark ══ */
+.phone-frame.dark-mode .card,
+.phone-frame.dark-mode .tcard,
+.phone-frame.dark-mode .met-card,
+.phone-frame.dark-mode .slist,
+.phone-frame.dark-mode .atabs,
+.phone-frame.dark-mode .ach,
+.phone-frame.dark-mode .stat-box,
+.phone-frame.dark-mode .kanban-task,
+.phone-frame.dark-mode .finp,
+.phone-frame.dark-mode .noise-btn,
+.phone-frame.dark-mode .noise-card,
+.phone-frame.dark-mode .noise-list,
+.phone-frame.dark-mode .noise-list-item,
+.phone-frame.dark-mode .preset-btn,
+.phone-frame.dark-mode .theme-opt,
+.phone-frame.dark-mode .sel-task,
+.phone-frame.dark-mode .sess-btn,
+.phone-frame.dark-mode .s-group,
+.phone-frame.dark-mode .kanban-col,
+.phone-frame.dark-mode .kt,
+.phone-frame.dark-mode .summary-sheet,
+.phone-frame.dark-mode .summary-ring-row,
+.phone-frame.dark-mode .summary-ring-inner,
+.phone-frame.dark-mode .sm-ghost,
+.phone-frame.dark-mode .bell,
+.phone-frame.dark-mode .sitem,
+.phone-frame.dark-mode .lang-row,
+.phone-frame.dark-mode .lang-opt,
+.phone-frame.dark-mode .notif-row,
+.phone-frame.dark-mode .pulse-card { background:#2A2520 !important; }
+
+/* ══ BORDERS → warm dark ══ */
+.phone-frame.dark-mode .card,
+.phone-frame.dark-mode .tcard,
+.phone-frame.dark-mode .met-card,
+.phone-frame.dark-mode .noise-card,
+.phone-frame.dark-mode .noise-list,
+.phone-frame.dark-mode .noise-list-item,
+.phone-frame.dark-mode .preset-btn,
+.phone-frame.dark-mode .theme-opt,
+.phone-frame.dark-mode .sel-task,
+.phone-frame.dark-mode .sess-btn,
+.phone-frame.dark-mode .bell,
+.phone-frame.dark-mode .back-btn,
+.phone-frame.dark-mode .kt,
+.phone-frame.dark-mode .lang-row,
+.phone-frame.dark-mode .notif-row,
+.phone-frame.dark-mode .task-item,
+.phone-frame.dark-mode .pri-item,
+.phone-frame.dark-mode .sitem,
+.phone-frame.dark-mode .finp { border-color:#3D3730 !important; }
+
+/* ══ TIMER ══ */
+.phone-frame.dark-mode .timer-ring {
+  background:conic-gradient(#C4622D 0deg,#C4622D var(--p,0deg),#3A3530 var(--p,0deg)) !important;
+}
+.phone-frame.dark-mode .timer-inner {
+  background:#2A2520 !important;
+}
+.phone-frame.dark-mode .timer-val { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .timer-lbl { color:#9A9088 !important; }
+
+/* ══ CTRL BUTTONS (reset / skip) ══ */
+.phone-frame.dark-mode .ctrl {
+  background:#2A2520 !important;
+  border-color:#3D3730 !important;
+  color:#EDE5D8 !important;
+}
+.phone-frame.dark-mode .ctrl:hover { background:#332D27 !important; }
+
+/* ══ PRESET TIME BUTTONS ══ */
+.phone-frame.dark-mode .preset-btn .pb-min { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .preset-btn .pb-lbl { color:#9A9088 !important; }
+.phone-frame.dark-mode .preset-btn.active   { background:#C4622D !important; border-color:#C4622D !important; }
+.phone-frame.dark-mode .preset-btn.active .pb-min { color:#fff !important; }
+.phone-frame.dark-mode .preset-btn.active .pb-lbl { color:rgba(255,255,255,.7) !important; }
+
+/* ══ PRIMARY TEXT (all headings and labels) ══ */
+.phone-frame.dark-mode .home-name,
+.phone-frame.dark-mode .home-date,
+.phone-frame.dark-mode .sec-ttl,
+.phone-frame.dark-mode .task-nm,
+.phone-frame.dark-mode .pri-name,
+.phone-frame.dark-mode .slbl,
+.phone-frame.dark-mode .theme-nm,
+.phone-frame.dark-mode .noise-name,
+.phone-frame.dark-mode .timer-val,
+.phone-frame.dark-mode .pb-name,
+.phone-frame.dark-mode .kt-title,
+.phone-frame.dark-mode .lang-nm,
+.phone-frame.dark-mode .notif-nm,
+.phone-frame.dark-mode .break-title,
+.phone-frame.dark-mode .pulse-ttl,
+.phone-frame.dark-mode .met-val,
+.phone-frame.dark-mode .ach-lbl,
+.phone-frame.dark-mode .tcard-nm,
+.phone-frame.dark-mode .view-tab.active,
+.phone-frame.dark-mode .summary-headline { color:#EDE5D8 !important; }
+
+/* ══ SECONDARY TEXT ══ */
+.phone-frame.dark-mode .ssub,
+.phone-frame.dark-mode .task-meta,
+.phone-frame.dark-mode .pri-due,
+.phone-frame.dark-mode .nc-lbl,
+.phone-frame.dark-mode .focus-status,
+.phone-frame.dark-mode .pb-date,
+.phone-frame.dark-mode .lang-sub,
+.phone-frame.dark-mode .notif-sub,
+.phone-frame.dark-mode .cal-day-lbl,
+.phone-frame.dark-mode .met-lbl,
+.phone-frame.dark-mode .ach-name { color:#9A9088 !important; }
+
+/* ══ ACTIVE / SELECTED STATES ══ */
+.phone-frame.dark-mode .noise-card.active { background:#3A2018 !important; border-color:#C4622D !important; }
+.phone-frame.dark-mode .theme-opt.sel     { border-color:#C4622D !important; }
+.phone-frame.dark-mode .task-chk          { border-color:#4D4740 !important; }
+
+/* ══ CALENDAR ══ */
+.phone-frame.dark-mode .cal-day { color:#EDE5D8; }
+.phone-frame.dark-mode .cal-num { color:#EDE5D8; }
+
+/* ══ SETTINGS ══ */
+.phone-frame.dark-mode .sicon { background:#332D27 !important; }
+
+/* ══ KANBAN ══ */
+.phone-frame.dark-mode .kanban-task { background:#2A2520 !important; }
+.phone-frame.dark-mode .kt-title    { color:#EDE5D8 !important; }
+
+/* ══ ANALYTICS TABS ══ */
+.phone-frame.dark-mode .atab { color:#9A9088 !important; }
+.phone-frame.dark-mode .atab.active { color:#C4622D !important; }
+
+/* ══ ANALYTICS METRIC CARDS ══ */
+.phone-frame.dark-mode .met-v { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .met-l { color:#9A9088 !important; }
+.phone-frame.dark-mode .met-c { color:#2BB88A !important; }
+
+/* ══ ANALYTICS FOCUS STATS ══ */
+.phone-frame.dark-mode .fs-v { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .fs-l { color:#9A9088 !important; }
+.phone-frame.dark-mode .focus-stat { border-bottom-color:#3D3730 !important; }
+
+/* ══ ANALYTICS BAR CHART ══ */
+.phone-frame.dark-mode .bar-l { color:#6A6460 !important; }
+.phone-frame.dark-mode .bar-l.today { color:#C4622D !important; }
+.phone-frame.dark-mode .bar { background:#3D3730 !important; }
+.phone-frame.dark-mode .bar.active { background:#C4622D !important; }
+
+/* ══ PROJECT BREAKDOWN BARS ══ */
+.phone-frame.dark-mode .pbr-name { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .pbr-count { color:#9A9088 !important; }
+.phone-frame.dark-mode .pbr-track { background:#3D3730 !important; }
+
+/* ══ INPUTS ══ */
+.phone-frame.dark-mode input,
+.phone-frame.dark-mode textarea,
+.phone-frame.dark-mode .finp {
+  background:#2A2520 !important;
+  color:#EDE5D8 !important;
+  border-color:#3D3730 !important;
+}
+
+/* ══ BREAK SCREEN ══ */
+.phone-frame.dark-mode .break-screen { background:#1E1A17 !important; }
+.phone-frame.dark-mode .break-title  { color:#EDE5D8 !important; }
+
+/* ══ PRIORITY HIGHLIGHTS — correct class names ══ */
+.phone-frame.dark-mode .pri-nm { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .pri-dt { color:#9A9088 !important; }
+.phone-frame.dark-mode .pri-item { border-bottom-color:#3D3730 !important; }
+
+/* ══ TIMER DISPLAY — correct class is .timer-display not .timer-val ══ */
+.phone-frame.dark-mode .timer-display { color:#C4622D !important; }
+.phone-frame.dark-mode .timer-sub     { color:#9A9088 !important; }
+
+/* ══ ANALYTICS TABS — fix orange-text-on-orange-bg bug ══ */
+.phone-frame.dark-mode .atabs              { background:#252018 !important; }
+.phone-frame.dark-mode .atab               { color:#9A9088 !important; }
+.phone-frame.dark-mode .atab.active        { background:#C4622D !important; color:#fff !important; }
+
+/* ══ NOTIFICATIONS — correct class is .tog-lbl not .notif-nm ══ */
+.phone-frame.dark-mode .tog-lbl  { color:#EDE5D8 !important; }
+.phone-frame.dark-mode .tog-row  { border-bottom-color:#3D3730 !important; background:transparent !important; }
+
+/* ══ DATE INPUT CALENDAR ICON — make it orange/visible ══ */
+.phone-frame.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+  filter:invert(0.6) sepia(1) saturate(8) hue-rotate(330deg);
+  opacity:1;
+  cursor:pointer;
+}
+
+/* ══ CSS ATTRIBUTE SELECTOR FALLBACK for inline styles ══
+   CSS !important overrides even inline style="" attributes             */
+.phone-frame.dark-mode [style*="background:#fff"],
+.phone-frame.dark-mode [style*="background: #fff"],
+.phone-frame.dark-mode [style*="background:#FFF"],
+.phone-frame.dark-mode [style*="background:#ffffff"],
+.phone-frame.dark-mode [style*="background: #ffffff"],
+.phone-frame.dark-mode [style*="background:#FFFFFF"] { background:#2A2520 !important; }
+
+.phone-frame.dark-mode [style*="background:#F7F4EF"],
+.phone-frame.dark-mode [style*="background: #F7F4EF"],
+.phone-frame.dark-mode [style*="background:#f7f4ef"] { background:#2A2520 !important; }
+
+.phone-frame.dark-mode [style*="background:#FDFBF7"],
+.phone-frame.dark-mode [style*="background: #FDFBF7"] { background:#252018 !important; }
+
+.phone-frame.dark-mode [style*="background:#FEF6EF"],
+.phone-frame.dark-mode [style*="background: #FEF6EF"] { background:#2E1E14 !important; }
+
+.phone-frame.dark-mode [style*="background:#F0EBE2"],
+.phone-frame.dark-mode [style*="background: #F0EBE2"] { background:#252018 !important; }
+
+/* Inline text color overrides */
+.phone-frame.dark-mode [style*="color:#1A1A18"],
+.phone-frame.dark-mode [style*="color: #1A1A18"],
+.phone-frame.dark-mode [style*="color:#1a1a18"] { color:#EDE5D8 !important; }
+
+.phone-frame.dark-mode [style*="color:#9A9590"],
+.phone-frame.dark-mode [style*="color: #9A9590"] { color:#9A9088 !important; }
+
+/* Inline border-color overrides */
+.phone-frame.dark-mode [style*="border-color:#EAE5DC"],
+.phone-frame.dark-mode [style*="border: 1px solid #EAE5DC"],
+.phone-frame.dark-mode [style*="border:1px solid #EAE5DC"] { border-color:#3D3730 !important; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:#C4622D;">Fluxly</span>
+    <div class="status-icons"><span>●●●</span><span style="font-size:10px;">WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="screen-container">
+
+    <!-- ══════════════════ HOME ══════════════════ -->
+    <div class="screen active" id="screen-home">
+      <div class="home-top">
+        <div class="home-sub">Tuesday, August 1</div>
+        <div class="home-row">
+          <div class="home-name">Good Afternoon, Alex.</div>
+          <div onclick="navigate('settings-profile')" style="width:42px;height:42px;border-radius:50%;background:#FEF0E7;border:2px solid #C4622D;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0;" title="Profile &amp; Settings">
+            <span style="font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:#C4622D;">AM</span>
+            <div style="width:10px;height:10px;border-radius:50%;background:#1D9E75;border:2px solid #F7F4EF;position:absolute;bottom:0;right:0;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-banner" onclick="showSummary()">
+        <div class="sb-icon">📊</div>
+        <div class="sb-text">
+          <div class="sb-title">Daily Summary</div>
+          <div class="sb-sub">2 of 5 completed · 40%</div>
+        </div>
+        <div class="sb-ring" style="background:conic-gradient(#C4622D 0deg,#C4622D 144deg,rgba(255,255,255,.15) 144deg);">
+          <div class="sb-inner"><span class="sb-pct">40%</span></div>
+        </div>
+      </div>
+
+      <div class="focus-bar" onclick="navigate('focus')">
+        <div class="fb-icon">⏱</div>
+        <div class="fb-text"><div class="fb-title">Start a Focus Session</div><div class="fb-sub">Pomodoro · 25 min</div></div>
+        <div class="fb-time">25:00</div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Today's Tasks</div><div class="sec-lnk" onclick="navigate('tasks')">View all</div></div>
+        <div class="task-item" onclick="toggleTask(this)">
+          <div class="task-chk done">✓</div>
+          <div class="task-info"><div class="task-nm done">Review design mockups</div><div class="task-mt">Aug 1 · Design Project</div></div>
+          <div class="task-pct" style="color:#0F6E56">100%</div>
+        </div>
+        <div class="task-item" onclick="toggleTask(this)">
+          <div class="task-chk"></div>
+          <div class="task-info"><div class="task-nm">Write UX case study draft</div><div class="task-mt">Aug 1 · Portfolio</div></div>
+          <div class="task-pct" style="color:#EF9F27">65%</div>
+        </div>
+        <div class="task-item" onclick="toggleTask(this)">
+          <div class="task-chk"></div>
+          <div class="task-info"><div class="task-nm">Client onboarding call</div><div class="task-mt">Aug 1 · 3:00 PM</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Priority Highlights</div></div>
+        <div class="pri-item"><div class="pri-dot ph"></div><div class="pri-info"><div class="pri-nm">Submit final wireframes</div><div class="pri-dt">Due today · Fluxly App</div></div><div class="badge badge-r">High</div></div>
+        <div class="pri-item"><div class="pri-dot pm"></div><div class="pri-info"><div class="pri-nm">Persona research review</div><div class="pri-dt">Due Aug 3 · Research</div></div><div class="badge badge-a">Med</div></div>
+        <div class="pri-item"><div class="pri-dot pl"></div><div class="pri-info"><div class="pri-nm">Update portfolio site</div><div class="pri-dt">Due Aug 7 · Personal</div></div><div class="badge badge-g">Low</div></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Upcoming</div><div class="sec-lnk">August 2025</div></div>
+        <div class="cal-strip">
+          <div class="cal-day"><span class="cal-dn">Sun</span><span class="cal-num">27</span></div>
+          <div class="cal-day"><span class="cal-dn">Mon</span><span class="cal-num">28</span><span class="cal-dot"></span></div>
+          <div class="cal-day"><span class="cal-dn">Tue</span><span class="cal-num">29</span></div>
+          <div class="cal-day"><span class="cal-dn">Wed</span><span class="cal-num">30</span><span class="cal-dot"></span></div>
+          <div class="cal-day today"><span class="cal-dn">Thu</span><span class="cal-num">1</span><span class="cal-dot"></span></div>
+          <div class="cal-day"><span class="cal-dn">Fri</span><span class="cal-num">2</span></div>
+          <div class="cal-day"><span class="cal-dn">Sat</span><span class="cal-num">3</span><span class="cal-dot"></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Productivity Summary</div><div class="sec-lnk" onclick="navigate('analytics')">Details</div></div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-v">12</div><div class="stat-l">Tasks Completed</div></div>
+          <div class="stat-box"><div class="stat-v">6</div><div class="stat-l">Day Streak</div></div>
+          <div class="stat-box"><div class="stat-v">78%</div><div class="stat-l">Weekly Goal</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TASKS ══════════════════ -->
+    <div class="screen" id="screen-tasks">
+      <div class="tasks-top"><div class="tasks-title">My Tasks</div><div class="tasks-add" onclick="navigate('add-task')">＋</div></div>
+      <div class="card" style="margin-bottom:8px;">
+        <div class="sec-hdr" style="margin-bottom:8px;"><div class="sec-lnk" style="color:#9A9590;font-size:13px;font-weight:600;">‹ August 2025 ›</div></div>
+        <div class="cal-strip">
+          <div class="cal-day"><span class="cal-dn">M</span><span class="cal-num">28</span></div>
+          <div class="cal-day"><span class="cal-dn">T</span><span class="cal-num">29</span></div>
+          <div class="cal-day"><span class="cal-dn">W</span><span class="cal-num">30</span></div>
+          <div class="cal-day"><span class="cal-dn">T</span><span class="cal-num">31</span></div>
+          <div class="cal-day today"><span class="cal-dn">F</span><span class="cal-num">1</span><span class="cal-dot"></span></div>
+          <div class="cal-day"><span class="cal-dn">S</span><span class="cal-num">2</span></div>
+          <div class="cal-day"><span class="cal-dn">S</span><span class="cal-num">3</span></div>
+        </div>
+      </div>
+      <!-- View tabs: List | Board | Projects -->
+      <div class="view-tabs">
+        <div class="vtab active" onclick="switchTaskView('list',this)">List</div>
+        <div class="vtab" onclick="switchTaskView('board',this)">Board</div>
+        <div class="vtab" onclick="switchTaskView('projects',this)">Projects</div>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div id="task-view-list">
+        <div class="tcard"><div class="tcard-chk" style="border-color:#0F6E56;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;">✓</div><div class="tcard-info"><div class="tcard-nm" style="text-decoration:line-through;color:#B8B3AA;">Review design mockups</div><div class="tcard-mt">Aug 1 · Design Project</div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:#0F6E56;"></div></div><div class="prog-pct" style="color:#0F6E56;">Complete</div></div></div>
+        <div class="tcard"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Write UX case study draft</div><div class="tcard-mt">Aug 1 · Portfolio</div><div class="prog-bar"><div class="prog-fill" style="width:65%;"></div></div><div class="prog-pct">65%</div></div></div>
+        <div class="tcard"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Conduct user interviews</div><div class="tcard-mt">Aug 3 · Research</div><div class="prog-bar"><div class="prog-fill" style="width:45%;"></div></div><div class="prog-pct">45%</div></div></div>
+        <div class="tcard"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Build competitive audit deck</div><div class="tcard-mt">Aug 5 · Strategy</div><div class="prog-bar"><div class="prog-fill" style="width:20%;"></div></div><div class="prog-pct">20%</div></div></div>
+        <div class="tcard"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Update portfolio website</div><div class="tcard-mt">Aug 7 · Personal</div></div></div>
+      </div>
+
+      <!-- BOARD VIEW (Kanban) -->
+      <div id="task-view-board" style="display:none;">
+        <div class="kanban-board">
+          <div class="kanban-col">
+            <div class="kanban-col-header"><div class="kch-dot" style="background:#9A9590;"></div><span class="kch-lbl" style="color:#9A9590;">Backlog</span><span class="kch-count">2</span></div>
+            <div class="kanban-area" style="background:#F7F4EF;">
+              <div class="kanban-task"><div class="kt-name">Build competitive audit deck</div><span class="kt-badge kt-med">Med</span></div>
+              <div class="kanban-task"><div class="kt-name">Update portfolio website</div><span class="kt-badge kt-low">Low</span></div>
+            </div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-col-header"><div class="kch-dot" style="background:#C4622D;"></div><span class="kch-lbl" style="color:#C4622D;">In Progress</span><span class="kch-count">2</span></div>
+            <div class="kanban-area" style="background:#FEF6EF;">
+              <div class="kanban-task"><div class="kt-name">Write UX case study draft</div><span class="kt-badge kt-high">High</span></div>
+              <div class="kanban-task"><div class="kt-name">Conduct user interviews</div><span class="kt-badge kt-med">Med</span></div>
+            </div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-col-header"><div class="kch-dot" style="background:#1D9E75;"></div><span class="kch-lbl" style="color:#1D9E75;">Done</span><span class="kch-count">1</span></div>
+            <div class="kanban-area" style="background:#EAF3DE;">
+              <div class="kanban-task"><div class="kt-name" style="text-decoration:line-through;color:#B8B3AA;">Review design mockups</div><span class="kt-badge" style="background:#D4EDE7;color:#085041;">Done</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS VIEW -->
+      <div id="task-view-projects" style="display:none;padding:0 16px;">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;color:#1A1A18;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">📁</span> Portfolio <span style="font-size:11px;color:#B8B3AA;margin-left:auto;">1/2</span>
+          </div>
+          <div class="tcard" style="margin:0 0 6px;"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Write UX case study draft</div><div class="tcard-mt">65% · Aug 1</div></div></div>
+          <div class="tcard" style="margin:0 0 6px;"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Update portfolio website</div><div class="tcard-mt">0% · Aug 7</div></div></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#1A1A18;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">📁</span> Research <span style="font-size:11px;color:#B8B3AA;margin-left:auto;">0/2</span>
+          </div>
+          <div class="tcard" style="margin:0 0 6px;"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Conduct user interviews</div><div class="tcard-mt">45% · Aug 3</div></div></div>
+          <div class="tcard" style="margin:0 0 6px;"><div class="tcard-chk"></div><div class="tcard-info"><div class="tcard-nm">Build competitive audit deck</div><div class="tcard-mt">20% · Aug 5</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ FOCUS ══════════════════ -->
+    <div class="screen" id="screen-focus">
+      <div style="padding:6px 20px 0;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#1A1A18;">Focus</div>
+        <div class="focus-status"><div class="focus-status-dot idle" id="status-dot"></div><span id="status-txt">Ready</span></div>
+      </div>
+      <div class="focus-wrap">
+        <div class="preset-row">
+          <div class="preset-btn active" onclick="selPreset(this,1500,'POMODORO')"><span class="pb-min">25 min</span><span class="pb-lbl">Pomodoro</span></div>
+          <div class="preset-btn" onclick="selPreset(this,2700,'DEEP WORK')"><span class="pb-min">45 min</span><span class="pb-lbl">Deep Work</span></div>
+          <div class="preset-btn" onclick="selPreset(this,600,'SPRINT')"><span class="pb-min">10 min</span><span class="pb-lbl">Quick Sprint</span></div>
+          <div class="preset-btn" onclick="selPreset(this,5400,'FLOW STATE')"><span class="pb-min">90 min</span><span class="pb-lbl">Flow State</span></div>
+        </div>
+        <div class="sel-task"><span>Select Task...</span><span style="color:#B8B3AA;font-size:12px;">▾</span></div>
+        <div class="timer-ring" id="timer-ring" style="--p:0deg;">
+          <div class="timer-inner">
+            <div class="timer-display" id="timer-display">25:00</div>
+            <div class="timer-sub" id="timer-lbl">POMODORO</div>
+          </div>
+        </div>
+        <div class="timer-ctrls">
+          <div class="ctrl" onclick="showModal('reset')">↺</div>
+          <div class="start" id="start-btn" onclick="toggleTimer()">▶</div>
+          <div class="ctrl" onclick="showModal('skip')">⏭</div>
+        </div>
+        <div style="width:100%;">
+          <div style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#9A9590;margin-bottom:10px;">Ambient Sound</div>
+          <div class="noise-scroll">
+            <div class="noise-card active" data-sound="rain" onclick="selNoise(this)"><span>🌧</span><span class="nc-lbl">Rain</span></div>
+            <div class="noise-card" data-sound="fire" onclick="selNoise(this)"><span>🔥</span><span class="nc-lbl">Bonfire</span></div>
+            <div class="noise-card" data-sound="ocean" onclick="selNoise(this)"><span>🌊</span><span class="nc-lbl">Ocean</span></div>
+            <div class="noise-card" data-sound="wind" onclick="selNoise(this)"><span>🌙</span><span class="nc-lbl">Night Wind</span></div>
+            <div class="noise-card" data-sound="thunder" onclick="selNoise(this)"><span>⛈</span><span class="nc-lbl">Thunder</span></div>
+            <div class="noise-card" data-sound="cafe" onclick="selNoise(this)"><span>☕</span><span class="nc-lbl">Café</span></div>
+            <div class="noise-card" data-sound="piano" onclick="selNoise(this)"><span>🎹</span><span class="nc-lbl">Piano</span></div>
+            <div class="noise-card" data-sound="forest" onclick="selNoise(this)"><span>🌿</span><span class="nc-lbl">Forest</span></div>
+          </div>
+        </div>
+        <div style="width:100%;background:#fff;border:1px solid #EAE5DC;border-radius:16px;overflow:hidden;">
+          <div class="tog-row"><span class="tog-lbl">Block Notifications</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+          <div class="tog-row"><span class="tog-lbl">Keep Screen On</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ ANALYTICS ══════════════════ -->
+    <div class="screen" id="screen-analytics">
+      <div style="padding:6px 20px 12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#1A1A18;">Analytics</div>
+        <div style="font-size:13px;font-weight:500;color:#9A9590;cursor:pointer;">This Week ▾</div>
+      </div>
+      <div class="atabs"><div class="atab active" onclick="switchATab(this,'atab-today')">Today</div><div class="atab" onclick="switchATab(this,'atab-projects')">Projects</div><div class="atab" onclick="switchATab(this,'atab-trends')">Trends</div></div>
+
+      <!-- TODAY TAB -->
+      <div id="atab-today">
+      <div style="padding:0 16px;margin-bottom:8px;"><div style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#9A9590;">Overview</div></div>
+      <div class="met-row">
+        <div class="met-card"><div class="met-v">12</div><div class="met-l">Tasks Completed</div><div class="met-c">↑ 4 from yesterday</div></div>
+        <div class="met-card"><div class="met-v">6</div><div class="met-l">Day Streak</div><div class="met-c">Personal best!</div></div>
+      </div>
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Time &amp; Focus</div></div>
+        <div class="focus-stat"><span class="fs-l">Focus time today</span><span class="fs-v">2h 36m</span></div>
+        <div class="focus-stat"><span class="fs-l">Sessions completed</span><span class="fs-v">5</span></div>
+        <div class="focus-stat"><span class="fs-l">Peak productivity</span><span class="fs-v">9AM – 12PM</span></div>
+        <div class="focus-stat"><span class="fs-l">Avg. session length</span><span class="fs-v">25 min</span></div>
+      </div>
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Achievements</div></div>
+        <div class="ach-grid">
+          <div class="ach"><div class="ach-icon">🏆</div><div class="ach-nm">First Task</div></div>
+          <div class="ach"><div class="ach-icon">🔥</div><div class="ach-nm">7-Day Streak</div></div>
+          <div class="ach"><div class="ach-icon">⚡</div><div class="ach-nm">Power Hour</div></div>
+          <div class="ach" style="opacity:.35"><div class="ach-icon">🎯</div><div class="ach-nm">Goal Crusher</div></div>
+        </div>
+      </div>
+      </div>
+
+      <!-- PROJECTS TAB -->
+      <div id="atab-projects" style="display:none;padding:0 16px;">
+        <div class="card" style="margin:0 0 12px;">
+          <div class="sec-hdr"><div class="sec-ttl">By Project</div></div>
+          <div class="proj-bar-row">
+            <div class="pbr-header"><div class="pbr-name"><div class="pbr-dot" style="background:#C4622D;"></div>Portfolio</div><span class="pbr-count">1/2</span></div>
+            <div class="pbr-track"><div class="pbr-fill" style="width:50%;background:#C4622D;"></div></div>
+          </div>
+          <div class="proj-bar-row">
+            <div class="pbr-header"><div class="pbr-name"><div class="pbr-dot" style="background:#1D9E75;"></div>Research</div><span class="pbr-count">0/2</span></div>
+            <div class="pbr-track"><div class="pbr-fill" style="width:30%;background:#1D9E75;"></div></div>
+          </div>
+          <div class="proj-bar-row">
+            <div class="pbr-header"><div class="pbr-name"><div class="pbr-dot" style="background:#7C3AED;"></div>Strategy</div><span class="pbr-count">0/1</span></div>
+            <div class="pbr-track"><div class="pbr-fill" style="width:20%;background:#7C3AED;"></div></div>
+          </div>
+          <div class="proj-bar-row">
+            <div class="pbr-header"><div class="pbr-name"><div class="pbr-dot" style="background:#EF9F27;"></div>Personal</div><span class="pbr-count">0/1</span></div>
+            <div class="pbr-track"><div class="pbr-fill" style="width:0%;background:#EF9F27;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRENDS TAB -->
+      <div id="atab-trends" style="display:none;">
+      <div class="card">
+        <div class="sec-hdr"><div class="sec-ttl">Progress Trend</div><span style="font-size:11px;font-weight:600;color:#C4622D;">40% done</span></div>
+        <div style="font-size:11px;color:#B8B3AA;margin-bottom:12px;">2 of 5 tasks this week</div>
+        <div class="bar-wrap">
+          <div class="bar-col"><div class="bar" style="height:40%;"></div><div class="bar-l">M</div></div>
+          <div class="bar-col"><div class="bar" style="height:60%;"></div><div class="bar-l">T</div></div>
+          <div class="bar-col"><div class="bar active" style="height:90%;"></div><div class="bar-l">W</div></div>
+          <div class="bar-col"><div class="bar" style="height:55%;"></div><div class="bar-l">T</div></div>
+          <div class="bar-col"><div class="bar today" style="height:72%;"></div><div class="bar-l today">F</div></div>
+          <div class="bar-col"><div class="bar" style="height:15%;"></div><div class="bar-l">S</div></div>
+          <div class="bar-col"><div class="bar" style="height:8%;"></div><div class="bar-l">S</div></div>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F0EBE2;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;">
+          <div><div style="font-size:11px;color:#9A9590;">Peak Day</div><div style="font-size:12px;font-weight:600;color:#1A1A18;">Wednesday</div></div>
+          <div><div style="font-size:11px;color:#9A9590;">Avg / Day</div><div style="font-size:12px;font-weight:600;color:#1A1A18;">2 tasks</div></div>
+          <div><div style="font-size:11px;color:#9A9590;">Streak</div><div style="font-size:12px;font-weight:600;color:#1A1A18;">6 🔥</div></div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ SETTINGS ══════════════════ -->
+    <div class="screen" id="screen-settings">
+      <div style="padding:6px 20px 14px;"><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#1A1A18;">Settings</div></div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:#FEF0E7;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:#C4622D;font-family:'Playfair Display',serif;">AM</div>
+        <div><div style="font-size:16px;font-weight:600;color:#1A1A18;">Alex Morgan</div><div style="font-size:12px;color:#9A9590;">hello@alexmorgan.design</div></div>
+        <div style="margin-left:auto;font-size:13px;color:#C4622D;font-weight:500;cursor:pointer;" onclick="navigate('settings-profile')">Edit</div>
+      </div>
+      <div class="slist">
+        <div class="sitem" onclick="navigate('settings-profile')"><div class="sicon io">👤</div><div class="stext"><div class="slbl">Profile &amp; Account</div><div class="ssub">Manage your personal info</div></div><div class="sarr">›</div></div>
+        <div class="sitem" onclick="navigate('settings-notif')"><div class="sicon ib">🔔</div><div class="stext"><div class="slbl">Notifications</div><div class="ssub">5 types enabled</div></div><div class="sarr">›</div></div>
+        <div class="sitem" onclick="navigate('settings-theme')"><div class="sicon ip">🎨</div><div class="stext"><div class="slbl">Theme</div><div class="ssub">Light mode</div></div><div class="sarr">›</div></div>
+        <div class="sitem" onclick="navigate('settings-lang')"><div class="sicon ig">🌐</div><div class="stext"><div class="slbl">Language</div><div class="ssub">English</div></div><div class="sarr">›</div></div>
+        <div class="sitem" style="border-top:1px solid #F0EBE2;"><div class="sicon ir">🚪</div><div class="stext"><div class="slbl" style="color:#A32D2D;">Log Out</div></div></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════ PROFILE ══════════════════ -->
+    <div class="screen" id="screen-settings-profile">
+      <div class="screen-hdr"><div class="back-btn" onclick="navigate('settings')">‹</div><div class="screen-ttl">Profile &amp; Account</div></div>
+      <div class="avatar-wrap">
+        <div style="position:relative;width:84px;margin:0 auto 8px;">
+          <div class="avatar" style="width:84px;height:84px;font-size:30px;border:3px solid #C4622D;">AM</div>
+          <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#C4622D;display:flex;align-items:center;justify-content:center;border:2px solid #F7F4EF;cursor:pointer;font-size:12px;">📷</div>
+        </div>
+        <div class="change-photo">Tap to change photo</div>
+      </div>
+      <div class="fgrp"><label class="flbl">Full Name</label><input class="finp" type="text" value="Alex Morgan"></div>
+      <div class="fgrp"><label class="flbl">Email</label><input class="finp" type="email" value="hello@alexmorgan.design"></div>
+      <div class="fgrp"><label class="flbl">Username</label><input class="finp" type="text" value="@alexmorgan"></div>
+      <div class="fgrp"><label class="flbl">Phone Number</label><input class="finp" type="tel" placeholder="Add phone number"></div>
+      <div class="fgrp"><label class="flbl">Password</label><input class="finp" type="password" value="••••••••"></div>
+      <div style="padding:6px 16px 2px;"><div style="background:#FEF6EF;border:1px solid #F5CEAE;border-radius:12px;padding:12px;font-size:12px;color:#9B4A22;display:flex;gap:8px;align-items:center;"><span>⚠</span><span>Deleting this account will erase all your data. This action cannot be undone.</span></div></div>
+      <button class="sbtn">Save Changes</button>
+    </div>
+
+    <!-- ══════════════════ NOTIFICATIONS ══════════════════ -->
+    <div class="screen" id="screen-settings-notif">
+      <div class="screen-hdr"><div class="back-btn" onclick="navigate('settings')">‹</div><div class="screen-ttl">Notifications</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="tog-row"><span class="tog-lbl">Promotions Alerts</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Security Alerts</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Task Reminders</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Goal Updates</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Task Notifications</span><div class="toggle" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Weekly Summary</span><div class="toggle on" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="tog-row"><span class="tog-lbl">Goal Progress</span><div class="toggle" onclick="toggleSw(this)"><div class="toggle-thumb"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ THEME ══════════════════ -->
+    <div class="screen" id="screen-settings-theme">
+      <div class="screen-hdr"><div class="back-btn" onclick="navigate('settings')">‹</div><div class="screen-ttl">Theme</div></div>
+      <div style="padding:8px 0;">
+        <div class="theme-opt sel" onclick="selTheme(this)"><div class="theme-prev prev-l"></div><div class="theme-nm">Light</div><div class="t-radio sel"><div class="t-rdot"></div></div></div>
+        <div class="theme-opt" onclick="selTheme(this)"><div class="theme-prev prev-d"></div><div class="theme-nm">Dark</div><div class="t-radio"><div class="t-rdot"></div></div></div>
+        <div class="theme-opt" onclick="selTheme(this)"><div class="theme-prev prev-s"></div><div class="theme-nm">System Default</div><div class="t-radio"><div class="t-rdot"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ LANGUAGE ══════════════════ -->
+    <div class="screen" id="screen-settings-lang">
+      <div class="screen-hdr"><div class="back-btn" onclick="navigate('settings')">‹</div><div class="screen-ttl">Language</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🌐</div><div class="lang-nm">System Default</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇺🇸</div><div class="lang-nm">English</div><div class="lang-chk">✓</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇪🇸</div><div class="lang-nm">Español</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇫🇷</div><div class="lang-nm">Français</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇩🇪</div><div class="lang-nm">Deutsch</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇧🇷</div><div class="lang-nm">Português</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇨🇳</div><div class="lang-nm">中文</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇯🇵</div><div class="lang-nm">日本語</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇮🇳</div><div class="lang-nm">हिन्दी</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇷🇺</div><div class="lang-nm">Русский</div></div>
+        <div class="lang-opt" onclick="selLang(this)"><div class="lang-flag">🇸🇦</div><div class="lang-nm">العربية</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ ADD TASK ══════════════════ -->
+    <div class="screen" id="screen-add-task">
+      <div class="screen-hdr"><div class="back-btn" onclick="navigate('tasks')">‹</div><div class="screen-ttl">New Task</div></div>
+      <div class="fgrp" style="margin-top:28px;"><label class="flbl">Task Name</label><input class="finp" type="text" placeholder="What needs to get done?"></div>
+      <div class="fgrp"><label class="flbl">Description</label><textarea class="finp" rows="3" placeholder="Add details..." style="resize:none;line-height:1.6;"></textarea></div>
+      <div class="fgrp"><label class="flbl">Due Date</label><input class="finp" type="date"></div>
+      <div class="fgrp"><label class="flbl">Priority</label>
+        <div class="ppills">
+          <div class="ppill high" onclick="selPri(this)">High</div>
+          <div class="ppill med sel" onclick="selPri(this)">Medium</div>
+          <div class="ppill low" onclick="selPri(this)">Low</div>
+        </div>
+      </div>
+      <div class="fgrp"><label class="flbl">Project</label>
+        <select class="finp" style="appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9590' d='M6 8L1 3h10z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 16px center;">
+          <option>No Project</option><option>Portfolio</option><option>Fluxly App</option><option>Research</option>
+        </select>
+      </div>
+      <div class="fgrp"><label class="flbl">Subtasks</label><input class="finp" type="text" placeholder="+ Add a subtask"></div>
+      <button class="sbtn" onclick="navigate('tasks')">Add Task</button>
+    </div>
+
+    <!-- PULSE SCREEN -->
+    <div class="screen" id="screen-pulse">
+      <div style="padding:6px 20px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#1A1A18;">Fluxly <span style="color:#C4622D;">Pulse</span></div>
+          <div style="font-size:11px;color:#9A9590;margin-top:1px;">AI insights based on your patterns</div>
+        </div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.2);"></div>
+      </div>
+      <div class="card" style="border-left:3px solid #C4622D;border-radius:0 14px 14px 0;margin-left:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#C4622D;margin-bottom:8px;">✦ Focus insight</div>
+        <div style="font-size:14px;color:#1A1A18;line-height:1.6;margin-bottom:12px;">You focus best <strong>between 9–11AM.</strong> Your most critical task is due in 3 days — want to protect that window?</div>
+        <div style="display:flex;gap:8px;">
+          <button style="flex:1;padding:10px;border-radius:10px;background:#C4622D;color:#fff;border:none;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Block it ✓</button>
+          <button style="flex:1;padding:10px;border-radius:10px;background:#F7F4EF;color:#9A9590;border:1px solid #EAE5DC;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Dismiss</button>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid #EF9F27;border-radius:0 14px 14px 0;margin-left:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#EF9F27;margin-bottom:8px;">⚠ Task drift</div>
+        <div style="font-size:14px;color:#1A1A18;line-height:1.6;margin-bottom:12px;"><strong>"Write UX case study draft"</strong> has rolled over 3 days. Want to break it into two smaller steps?</div>
+        <div style="display:flex;gap:8px;">
+          <button style="flex:1;padding:10px;border-radius:10px;background:#C4622D;color:#fff;border:none;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Split it</button>
+          <button style="flex:1;padding:10px;border-radius:10px;background:#F7F4EF;color:#9A9590;border:1px solid #EAE5DC;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Dismiss</button>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid #1D9E75;border-radius:0 14px 14px 0;margin-left:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1D9E75;margin-bottom:8px;">⚡ Quick win</div>
+        <div style="font-size:14px;color:#1A1A18;line-height:1.6;margin-bottom:12px;">You have <strong>12 minutes</strong> before your next commitment. Here's a task that fits.</div>
+        <div style="background:#F7F4EF;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:18px;height:18px;border-radius:50%;border:2px solid #D0CCC4;flex-shrink:0;"></div>
+          <div><div style="font-size:13px;font-weight:500;color:#1A1A18;">Message 2 customers</div><div style="font-size:10px;color:#B8B3AA;">Est. 10 min · Etsy Store</div></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button style="flex:1;padding:10px;border-radius:10px;background:#C4622D;color:#fff;border:none;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Start it ▶</button>
+          <button style="flex:1;padding:10px;border-radius:10px;background:#F7F4EF;color:#9A9590;border:1px solid #EAE5DC;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">Later</button>
+        </div>
+      </div>
+      <div style="margin:0 16px 12px;padding:14px;background:#F0EBE2;border-radius:14px;display:flex;align-items:center;gap:10px;">
+        <div style="font-size:18px;">✦</div>
+        <div><div style="font-size:12px;font-weight:600;color:#1A1A18;">Pulse is learning your patterns</div><div style="font-size:11px;color:#9A9590;margin-top:1px;">Insights improve as you use Fluxly</div></div>
+      </div>
+    </div>
+
+    <!-- BREAK SCREEN — inside screen-container so position:absolute scopes correctly -->
+    <div class="screen" id="screen-break">
+      <div class="break-screen">
+        <div class="break-trophy">🏆</div>
+        <div class="break-title">Great Work!<br>Time for a Break.</div>
+        <div class="break-sub">You completed a full focus session. Take a well-deserved rest before diving back in.</div>
+        <div class="break-btn-row">
+          <button class="break-btn break-btn-short" onclick="startBreak(5)">5 min Break</button>
+          <button class="break-btn break-btn-long" onclick="startBreak(15)">15 min Break</button>
+        </div>
+        <div style="font-size:12px;color:#C4622D;font-weight:600;cursor:pointer;margin-top:.5rem;" onclick="navigate('focus')">Skip Break →</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="navigate('home')"><div class="nav-icon">⌂</div><div class="nav-label">Home</div></div>
+    <div class="nav-item" id="nav-tasks" onclick="navigate('tasks')"><div class="nav-icon">☑</div><div class="nav-label">Tasks</div></div>
+    <div class="nav-fab" onclick="navigate('add-task')">＋</div>
+    <div class="nav-item" id="nav-pulse" onclick="navigate('pulse')"><div class="nav-icon">✦</div><div class="nav-label">Pulse</div></div>
+    <div class="nav-item" id="nav-settings" onclick="navigate('settings')"><div class="nav-icon">⚙</div><div class="nav-label">Settings</div></div>
+  </div>
+
+  <!-- Reset Session Modal — inside phone-frame so position:absolute scopes correctly -->
+  <div class="modal-overlay hidden" id="modal-reset">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Reset Session?</div>
+      <div class="modal-sub">This will clear your current focus timer. Task progress will be saved.</div>
+      <div class="modal-btn-row">
+        <button class="modal-btn modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn modal-confirm-red" onclick="resetTimer();closeModal()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skip Session Modal — inside phone-frame -->
+  <div class="modal-overlay hidden" id="modal-skip">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Skip Session?</div>
+      <div class="modal-sub">Ready to move on? Skipping will end this Pomodoro and move to break time.</div>
+      <div class="modal-btn-row">
+        <button class="modal-btn modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn modal-confirm-rust" onclick="navigate('break');closeModal()">Skip to Break</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Summary Modal — inside phone-frame -->
+  <div class="summary-modal hidden" id="daily-summary-modal" onclick="hideSummary()">
+    <div class="summary-sheet" onclick="event.stopPropagation()">
+      <div class="summary-handle"></div>
+      <div class="summary-date">Daily Summary · August 1</div>
+      <div class="summary-headline">💪 Solid progress. Keep the momentum going.</div>
+      <div class="summary-ring-row">
+        <div class="summary-ring" style="background:conic-gradient(#C4622D 0deg,#C4622D 144deg,#EAE5DC 144deg);">
+          <div class="summary-ring-inner"><span class="summary-ring-pct">40%</span></div>
+        </div>
+        <div class="summary-stats">
+          <div><div class="ss-val" style="color:#1D9E75;">2</div><div class="ss-lbl">Completed</div></div>
+          <div><div class="ss-val" style="color:#EF9F27;">3</div><div class="ss-lbl">Remaining</div></div>
+        </div>
+      </div>
+      <div class="sm-label" style="color:#A32D2D;"><span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;display:inline-block;"></span> 1 High-Priority Still Pending</div>
+      <div class="sm-task"><div style="width:16px;height:16px;border-radius:4px;border:2px solid #E24B4A;flex-shrink:0;"></div><span class="sm-task-name">Write UX case study draft</span><span style="font-size:10px;color:#B8B3AA;">Portfolio</span></div>
+      <div class="sm-label" style="color:#1D9E75;margin-top:12px;"><span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;display:inline-block;"></span> Completed Today</div>
+      <div class="sm-task"><div style="width:16px;height:16px;border-radius:4px;background:#0F6E56;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:9px;color:#fff;font-weight:700;">✓</span></div><span class="sm-done-name">Review design mockups</span></div>
+      <div class="sm-task"><div style="width:16px;height:16px;border-radius:4px;background:#0F6E56;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:9px;color:#fff;font-weight:700;">✓</span></div><span class="sm-done-name">Client onboarding call</span></div>
+      <div class="sm-btn-row">
+        <button class="sm-btn sm-primary" onclick="hideSummary();navigate('focus')">Start Focus Session</button>
+        <button class="sm-btn sm-ghost" onclick="hideSummary();navigate('tasks')">View Tasks</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Legend panel -->
+<div style="width:220px;flex-shrink:0;">
+  <div style="background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 24px rgba(0,0,0,.1);margin-bottom:16px;">
+    <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#1A1A18;margin-bottom:14px;font-style:italic;">Fluxly</div>
+    <div style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#9A9590;margin-bottom:10px;">Navigate to</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div onclick="navigate('home')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">⌂ Home Dashboard</div>
+      <div onclick="navigate('tasks')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">☑ Tasks</div>
+      <div onclick="navigate('add-task')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">＋ Add Task</div>
+      <div onclick="navigate('focus')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">⏱ Focus Timer</div>
+      <div onclick="navigate('pulse')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#C4622D;cursor:pointer;border:1px solid #C4622D;transition:all .15s;background:#FEF6EF;" onmouseover="this.style.borderColor='#8C3E17'" onmouseout="this.style.borderColor='#C4622D'">✦ Fluxly Pulse</div>
+      <div onclick="navigate('analytics')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">📊 Analytics</div>
+      <div onclick="navigate('settings')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">⚙ Settings</div>
+      <div onclick="navigate('settings-profile')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;background:#F7F4EF;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">↳ Profile</div>
+      <div onclick="navigate('settings-notif')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;background:#F7F4EF;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">↳ Notifications</div>
+      <div onclick="navigate('settings-theme')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;background:#F7F4EF;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">↳ Theme</div>
+      <div onclick="navigate('settings-lang')" style="padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#1A1A18;cursor:pointer;border:1px solid #EAE5DC;background:#F7F4EF;transition:all .15s;" onmouseover="this.style.borderColor='#C4622D'" onmouseout="this.style.borderColor='#EAE5DC'">↳ Language</div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const mainScreens=['home','tasks','focus','pulse','settings'];
+function navigate(s){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('screen-'+s);
+  if(el){el.classList.add('active');el.scrollTop=0;}
+  // Re-patch any elements on the newly active screen if dark mode is on
+  if(document.querySelector('.phone-frame.dark-mode') && el){
+    patchAllElements(document.querySelector('.phone-frame'), true);
+  }
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const base=s.split('-')[0];
+  const navEl=document.getElementById('nav-'+base);
+  if(navEl)navEl.classList.add('active');
+}
+function toggleTask(item){
+  const c=item.querySelector('.task-chk'),n=item.querySelector('.task-nm');
+  if(c.classList.contains('done')){c.classList.remove('done');c.innerHTML='';if(n)n.classList.remove('done');}
+  else{c.classList.add('done');c.innerHTML='✓';if(n)n.classList.add('done');}
+}
+function toggleSw(el){el.classList.toggle('on');}
+let currentAudio = null;
+function selNoise(el) {
+  document.querySelectorAll(".noise-card,.noise-list-item").forEach(b => {
+    b.classList.remove("active");
+    const r=b.querySelector(".noise-radio");if(r)r.classList.remove("on");
+  });
+  el.classList.add("active");
+  const r=el.querySelector(".noise-radio");if(r)r.classList.add("on");
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  const audio = document.getElementById("audio-" + el.dataset.sound);
+  currentAudio = audio || null;
+  if (audio && isRun) { audio.volume = 0.4; audio.play(); }
+}
+
+
+
+
+
+
+function showModal(type) {
+  document.getElementById('modal-reset').classList.add('hidden');
+  document.getElementById('modal-skip').classList.add('hidden');
+  document.getElementById('modal-' + type).classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modal-reset').classList.add('hidden');
+  document.getElementById('modal-skip').classList.add('hidden');
+}
+function startBreak(mins) {
+  tLeft = mins * 60; isRun = false;
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  document.getElementById('start-btn').textContent = '▶';
+  updateTimer(); navigate('focus');
+}
+function patchAllElements(frame, isDark) {
+  frame.querySelectorAll('[style]').forEach(function(el) {
+    var s = el.getAttribute('style') || '';
+    if (isDark) {
+      // Save original before first patch
+      if (!el.hasAttribute('data-ls')) el.setAttribute('data-ls', s);
+      // Skip conic-gradient elements (timer ring)
+      if (s.indexOf('conic-gradient') !== -1) return;
+      // ── Background colors (longer values first to avoid partial matches) ──
+      s = s.replace(/(background(?:-color)?:\s*)#(?:ffffff|FFFFFF)/g, '$1#2A2520');
+      s = s.replace(/(background(?:-color)?:\s*)#(?:fff|FFF)(?![a-fA-F0-9])/g, '$1#2A2520');
+      s = s.replace(/(background(?:-color)?:\s*)#(?:F7F4EF|f7f4ef)/g, '$1#2A2520');
+      s = s.replace(/(background(?:-color)?:\s*)#(?:FDFBF7|fdfbf7)/g, '$1#252018');
+      s = s.replace(/(background(?:-color)?:\s*)#(?:FEF6EF|fef6ef)/g, '$1#2E1E14');
+      s = s.replace(/(background(?:-color)?:\s*)#(?:F0EBE2|f0ebe2)/g, '$1#252018');
+      // ── Text color — match 'color:' at start or after semicolon only ──
+      s = s.replace(/((?:^|;)\s*)color:\s*#(?:1A1A18|1a1a18)/g, '$1color:#EDE5D8');
+      s = s.replace(/((?:^|;)\s*)color:\s*#(?:9A9590|9a9590)/g, '$1color:#9A9088');
+      s = s.replace(/((?:^|;)\s*)color:\s*#(?:C0BAB0|c0bab0)/g, '$1color:#7A7068');
+      s = s.replace(/((?:^|;)\s*)color:\s*#(?:B8B3AA|b8b3aa)/g, '$1color:#7A7068');
+      // ── Border colors ──
+      s = s.replace(/(border(?:-\w+)?:\s*\S+\s+\S+\s+)#(?:EAE5DC|eae5dc)/g, '$1#3D3730');
+      s = s.replace(/(border-color:\s*)#(?:EAE5DC|eae5dc)/g, '$1#3D3730');
+      s = s.replace(/(border-color:\s*)#(?:D0CCC4|d0ccc4)/g, '$1#4D4740');
+      el.setAttribute('style', s);
+    } else {
+      var orig = el.getAttribute('data-ls');
+      if (orig !== null) {
+        el.setAttribute('style', orig);
+        el.removeAttribute('data-ls');
+      }
+    }
+  });
+}
+function applyTheme(mode) {
+  var frame = document.querySelector('.phone-frame');
+  var isDark = (mode === 'dark') || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (isDark) {
+    frame.classList.add('dark-mode');
+    patchAllElements(frame, true);
+  } else {
+    patchAllElements(frame, false);
+    frame.classList.remove('dark-mode');
+  }
+  document.querySelectorAll('.sitem').forEach(function(item) {
+    var lbl = item.querySelector('.slbl');
+    var sub = item.querySelector('.ssub');
+    if (lbl && lbl.textContent.trim() === 'Theme' && sub) {
+      sub.textContent = mode === 'dark' ? 'Dark mode' : mode === 'light' ? 'Light mode' : 'System Default';
+    }
+  });
+}
+function selTheme(el) {
+  document.querySelectorAll('.theme-opt').forEach(function(t) {
+    t.classList.remove('sel');
+    t.querySelector('.t-radio').classList.remove('sel');
+  });
+  el.classList.add('sel');
+  el.querySelector('.t-radio').classList.add('sel');
+  var nm = el.querySelector('.theme-nm').textContent.trim();
+  applyTheme(nm === 'Dark' ? 'dark' : nm === 'Light' ? 'light' : 'system');
+}
+// React to OS theme changes when System Default is active
+// React to OS theme changes when System Default is active
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const active = document.querySelector('.theme-opt.sel .theme-nm');
+  if (active && active.textContent.trim() === 'System Default') applyTheme('system');
+});
+function selLang(el){document.querySelectorAll('.lang-chk').forEach(c=>c.remove());const c=document.createElement('div');c.className='lang-chk';c.textContent='✓';el.appendChild(c);}
+function selPri(el){const p=el.closest('.ppills');p.querySelectorAll('.ppill').forEach(pp=>pp.classList.remove('sel'));el.classList.add('sel');}
+function switchATab(el,tabId){
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['atab-today','atab-projects','atab-trends'].forEach(id=>{
+    const el2=document.getElementById(id);if(el2)el2.style.display='none';
+  });
+  const tab=document.getElementById(tabId);if(tab)tab.style.display='block';
+}
+function switchTaskView(view,el){
+  document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['task-view-list','task-view-board','task-view-projects'].forEach(id=>{
+    const v=document.getElementById(id);if(v)v.style.display='none';
+  });
+  const target=document.getElementById('task-view-'+view);if(target)target.style.display='block';
+}
+function selPreset(el,seconds,label){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  clearInterval(iv);isRun=false;total=seconds;tLeft=seconds;
+  document.getElementById('start-btn').textContent='▶';
+  const lbl=document.getElementById('timer-lbl');if(lbl)lbl.textContent=label;
+  updateTimer();
+  const dot=document.getElementById('status-dot');const txt=document.getElementById('status-txt');
+  if(dot)dot.classList.add('idle');if(txt)txt.textContent='Ready';
+}
+function showSummary(){const m=document.getElementById('daily-summary-modal');if(m)m.classList.remove('hidden');}
+function hideSummary(){const m=document.getElementById('daily-summary-modal');if(m)m.classList.add('hidden');}
+
+// Timer
+let iv=null,tLeft=1500,isRun=false,total=1500;
+function updateTimer(){
+  const m=Math.floor(tLeft/60),s=tLeft%60;
+  document.getElementById('timer-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const deg=((total-tLeft)/total)*360;
+  document.getElementById('timer-ring').style.setProperty('--p',deg+'deg');
+}
+function toggleTimer(){
+  const b=document.getElementById('start-btn');
+  const dot=document.getElementById('status-dot');const txt=document.getElementById('status-txt');
+  if(isRun){
+    clearInterval(iv);isRun=false;b.textContent='▶';
+    if(dot)dot.classList.add('idle');if(txt)txt.textContent='Ready';
+    if(currentAudio){ currentAudio.pause(); }
+  }else{
+    isRun=true;b.textContent='⏸';
+    if(dot)dot.classList.remove('idle');if(txt)txt.textContent='Active';
+    if(currentAudio){ currentAudio.volume=0.4; currentAudio.play(); }
+    iv=setInterval(()=>{
+      if(tLeft>0){tLeft--;updateTimer();}
+      else{clearInterval(iv);isRun=false;b.textContent='▶';
+        if(dot)dot.classList.add('idle');if(txt)txt.textContent='Ready';
+        tLeft=total;updateTimer();
+        if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; }
+        navigate('break');}
+    },1000);
+  }
+}
+function resetTimer() {
+  clearInterval(iv);
+  isRun = false;
+  tLeft = total;
+  document.getElementById('start-btn').textContent = '▶';
+  updateTimer();
+  // Stop ambient sound
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+}
+</script>
+
+<style>
+/* Noise list */
+.noise-list{display:flex;flex-direction:column;gap:0;width:100%;background:#fff;border:1px solid #EAE5DC;border-radius:16px;overflow:hidden;}
+.noise-list-item{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid #F0EBE2;cursor:pointer;transition:background .15s;}
+.noise-list-item:last-child{border-bottom:none;}
+.noise-list-item:hover{background:#FDFBF7;}
+.noise-list-item.active{background:#FEF6EF;}
+.noise-icon{font-size:20px;width:36px;text-align:center;}
+.noise-name{font-size:14px;font-weight:500;color:#1A1A18;flex:1;}
+.noise-radio{width:18px;height:18px;border-radius:50%;border:2px solid #D0CCC4;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.noise-radio.on{border-color:#C4622D;}
+.noise-radio-dot{width:8px;height:8px;border-radius:50%;background:#C4622D;display:none;}
+.noise-radio.on .noise-radio-dot{display:block;}
+.session-actions{display:flex;gap:10px;width:100%;padding:0 24px;}
+.sess-btn{flex:1;padding:12px;border-radius:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid #EAE5DC;background:#fff;color:#9A9590;transition:all .15s;}
+.sess-btn:hover{border-color:#C4622D;color:#C4622D;}
+.task-tag{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.tag-red{background:#E24B4A;}.tag-blue{background:#3B82F6;}.tag-green{background:#1D9E75;}
+.tag-amber{background:#EF9F27;}.tag-purple{background:#7C3AED;}
+.break-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:2rem;text-align:center;gap:1rem;}
+.break-trophy{font-size:64px;animation:bounce 1s ease infinite alternate;}
+.break-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;color:#1A1A18;line-height:1.2;}
+.break-sub{font-size:13px;color:#9A9590;line-height:1.6;max-width:260px;}
+.break-btn-row{display:flex;gap:10px;width:100%;margin-top:.5rem;}
+.break-btn{flex:1;padding:14px;border-radius:14px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;}
+.break-btn-short{background:#C4622D;color:#fff;}
+.break-btn-long{background:#F7F4EF;color:#1A1A18;border:1.5px solid #EAE5DC;}
+.modal-overlay{position:absolute;inset:0;background:rgba(27,25,22,.72);display:flex;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.hidden{display:none;}
+.modal-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;}
+.modal-handle{width:36px;height:4px;background:#EAE5DC;border-radius:99px;margin:0 auto 1.25rem;}
+.modal-title{font-size:17px;font-weight:600;color:#1A1A18;margin-bottom:.4rem;}
+.modal-sub{font-size:13px;color:#9A9590;margin-bottom:1.25rem;line-height:1.6;}
+.modal-btn-row{display:flex;gap:10px;}
+.modal-btn{flex:1;padding:14px;border-radius:14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;}
+.modal-cancel{background:#F7F4EF;color:#1A1A18;}
+.modal-confirm-red{background:#FCEBEB;color:#A32D2D;}
+.modal-confirm-rust{background:#C4622D;color:#fff;}
+@keyframes bounce{from{transform:translateY(0);}to{transform:translateY(-10px);}}
+</style>
+
+<!-- Audio files -->
+<audio id="audio-rain"    src="./Sounds/sound-rain.mp3"    loop></audio>
+<audio id="audio-fire"    src="./Sounds/sound-fire.mp3"    loop></audio>
+<audio id="audio-ocean"   src="./Sounds/sound-ocean.mp3"   loop></audio>
+<audio id="audio-wind"    src="./Sounds/sound-wind.mp3"    loop></audio>
+<audio id="audio-thunder" src="./Sounds/sound-thunder.mp3" loop></audio>
+<audio id="audio-cafe"    src="./Sounds/sound-cafe.mp3"    loop></audio>
+<audio id="audio-piano"   src="./Sounds/sound-piano.mp3"   loop></audio>
+<audio id="audio-forest"  src="./Sounds/sound-forest.mp3"  loop></audio>
+
+<!-- Break Screen -->
+
+</body>
+</html>

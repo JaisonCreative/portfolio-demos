@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roulette Rush</title>
+<meta name="description" content="Roulette Rush: playable mobile prototype by Jaison Rivera Creative Studio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: phone frame centered on a transparent page, full-bleed under 560px, ?embed for Framer.
+   Game screen: top bar / five-wheel rack / wheels + table switch / felt layout with bonus rail / chip tray + spin. */
+:root{
+  color-scheme: dark;
+  --ink:#07110d; --ink-2:#0c1a15; --panel:#11241c; --panel-2:#16302500;
+  --felt:#0f3a2c; --felt-hi:#17543f;
+  --line:rgba(233,205,140,.22); --line-2:rgba(233,205,140,.4);
+  --gold:#e2bd62; --gold-hi:#f7dc92; --gold-deep:#a9822f; --on-gold:#231804;
+  --cream:#f4ecd8; --muted:#9fb3a8;
+  --red:#c9313d; --red-hi:#e04652; --black:#16191b; --green:#1f9a57;
+  --silver:#c9d0d6; --bronze:#c27a45;
+  --w1:#3563d6; --w2:#8c2337; --w3:#1f8a4c; --w4:#d63a3a; --w5:#3a3d45;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{margin:0;background:transparent;color:var(--cream);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- phone frame ---------- */
+.page{height:100%}
+.stage{height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;box-sizing:border-box}
+.phone-slot{--s:1;flex:none;position:relative;width:calc(414px * var(--s));height:calc(868px * var(--s))}
+.phone{position:absolute;left:0;top:0;width:414px;height:868px;box-sizing:border-box;padding:12px;border-radius:62px;transform:scale(var(--s));transform-origin:0 0;
+  background:linear-gradient(150deg,#46423a 0%,#1d1b18 42%,#0d0c0b 100%);
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.18),inset 0 0 0 6px #0a0908,0 0 0 1px #000,0 30px 60px rgba(0,0,0,.45)}
+.phone::before,.phone::after{content:"";position:absolute;width:4px;border-radius:2px;background:#2a2723}
+.phone::before{left:-3px;top:170px;height:64px;box-shadow:0 84px 0 #2a2723}
+.phone::after{right:-3px;top:220px;height:96px}
+.glass{width:390px;height:844px;border-radius:50px;overflow:hidden;position:relative;background:var(--ink);isolation:isolate}
+.island{position:absolute;left:50%;top:11px;width:122px;height:35px;border-radius:20px;background:#000;transform:translateX(-50%);z-index:60;pointer-events:none}
+.statusbar{position:absolute;left:0;right:0;top:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:4px 34px 0;box-sizing:border-box;font-weight:700;font-size:15px;z-index:59;pointer-events:none}
+.statusbar .sb-r{display:flex;gap:6px;align-items:center}
+.homebar{position:absolute;left:50%;bottom:8px;width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:59;pointer-events:none}
+.page.bare .stage{padding:0;display:block}
+.page.bare .phone-slot{width:100%;height:100%}
+.page.bare .phone{position:static;width:100%;height:100%;padding:0;border-radius:0;transform:none;background:none;box-shadow:none}
+.page.bare .phone::before,.page.bare .phone::after,.page.bare .island,.page.bare .statusbar,.page.bare .homebar{display:none}
+.page.bare .glass{width:100%;height:100%;border-radius:0}
+body.bare-body{background:var(--ink)}
+
+/* ---------- app shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden;box-sizing:border-box;padding:48px 12px 22px;user-select:none;
+  background:radial-gradient(120% 55% at 50% 0%,#15352a 0%,transparent 70%),radial-gradient(80% 40% at 100% 100%,rgba(226,189,98,.07),transparent 70%),var(--ink)}
+.page.bare .app{padding:calc(6px + env(safe-area-inset-top,0px)) 12px calc(10px + env(safe-area-inset-bottom,0px))}
+
+.topbar{flex:none;display:flex;align-items:center;gap:8px;height:44px}
+.logo{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.logo svg{width:30px;height:30px;flex:none}
+.wordmark{font-family:var(--display);font-weight:900;font-size:21px;line-height:.86;letter-spacing:.01em;text-transform:uppercase}
+.wordmark i{font-style:normal;display:block;color:var(--gold);letter-spacing:.09em}
+.meter{display:flex;flex-direction:column;align-items:flex-end;font-variant-numeric:tabular-nums;padding:0 2px}
+.meter span{font-size:8.5px;letter-spacing:.18em;color:var(--muted);font-weight:800}
+.meter strong{font-family:var(--display);font-weight:800;font-size:20px;line-height:1}
+.iconbtn{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--gold);background:rgba(0,0,0,.2)}
+.iconbtn svg{width:18px;height:18px}
+.ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* rack */
+.rack{flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.wcard{position:relative;border-radius:12px;padding:5px 3px 4px;background:linear-gradient(180deg,#14291f,#0a1611);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:3px;transition:opacity .2s,box-shadow .2s}
+.wcard.off{opacity:.36}
+.wcard.off .wsvg{filter:grayscale(.85)}
+.wcard.hit{box-shadow:0 0 0 1.5px var(--gold),0 0 18px rgba(226,189,98,.35)}
+.badge{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:13px;color:#fff;box-shadow:0 0 0 1.5px var(--gold),0 2px 4px rgba(0,0,0,.5);z-index:2}
+.wsvg{width:100%;max-width:62px;aspect-ratio:1;display:block}
+.res{height:19px;min-width:30px;padding:0 6px;box-sizing:border-box;border-radius:10px;font-family:var(--display);font-weight:800;font-size:15px;line-height:19px;text-align:center;background:rgba(255,255,255,.06);color:var(--muted);font-variant-numeric:tabular-nums}
+.res.r{background:var(--red);color:#fff}.res.b{background:var(--black);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}.res.g{background:var(--green);color:#fff}
+.paid{font-size:10px;font-weight:800;height:12px;line-height:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.paid.win{color:var(--gold)}
+
+/* strip */
+.strip{flex:none;display:flex;align-items:center;gap:8px}
+.strip .lbl{font-size:8.5px;font-weight:800;letter-spacing:.16em;color:var(--muted)}
+.seg{display:flex;padding:2px;gap:2px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+.seg button{min-width:27px;height:26px;padding:0 7px;border-radius:8px;font-family:var(--display);font-weight:800;font-size:14px;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--gold);color:var(--on-gold)}
+.seg button small{font-family:var(--body);font-size:8.5px;font-weight:800;letter-spacing:.08em;margin-left:3px}
+.strip .grow{flex:1}
+
+/* table */
+.tablewrap{flex:1;min-height:0;display:flex;gap:7px}
+.table{flex:1;min-width:0;display:grid;grid-template-columns:.55fr .55fr repeat(6,.5fr);grid-template-rows:repeat(13,1fr) .8fr;padding:5px;border-radius:14px;
+  background:radial-gradient(130% 90% at 50% 30%,var(--felt-hi),var(--felt));box-shadow:inset 0 0 0 1px var(--line),inset 0 0 40px rgba(0,0,0,.35);position:relative}
+.cell{position:relative;margin:1px;border-radius:5px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:19px;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-variant-numeric:tabular-nums;transition:box-shadow .15s,filter .15s;min-width:0;min-height:0}
+.cell.n.r{background:linear-gradient(180deg,#d63845,#ac242e)}
+.cell.n.b{background:linear-gradient(180deg,#25292c,#111315)}
+.cell.zero{background:linear-gradient(180deg,#23ab64,#157642);border-radius:20px 20px 5px 5px;font-size:19px}
+.cell.zero.l{border-radius:20px 5px 5px 5px}.cell.zero.rr{border-radius:5px 20px 5px 5px}
+.cell.out{background:rgba(0,0,0,.18);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;letter-spacing:.06em;color:var(--cream)}
+.cell.out .v{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
+.cell.col{font-size:12px;color:var(--gold);background:rgba(0,0,0,.18);box-shadow:inset 0 0 0 1px var(--line)}
+.cell.note{background:none;box-shadow:none;font:800 8px/1.25 var(--body);letter-spacing:.12em;color:var(--muted);text-align:center}
+.diamond{width:14px;height:20px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.cell.cover{box-shadow:inset 0 0 0 2px var(--gold-hi);filter:brightness(1.18)}
+.cell.lit{box-shadow:inset 0 0 0 2px var(--gold),0 0 14px rgba(226,189,98,.55);z-index:1}
+.marks{position:absolute;top:1px;right:1px;display:flex;gap:1px;z-index:2}
+.mk{width:11px;height:11px;border-radius:50%;font:800 8px/11px var(--body);color:#fff;text-align:center;box-shadow:0 0 0 1px var(--gold)}
+.zones{grid-column:3/9;grid-row:1/14;position:relative;pointer-events:none;z-index:3;margin:0}
+.z{position:absolute;pointer-events:auto;transform:translate(-50%,-50%);border-radius:7px;display:grid;place-items:center}
+.z.p{width:22px;height:22px;border-radius:50%}
+.z.h{width:calc(33.333% - 24px);height:14px}
+.z.v{width:14px;height:calc(7.692% - 22px)}
+.z.s{width:16px;height:calc(7.692% - 22px)}
+.z:hover,.z:focus-visible{background:rgba(247,220,146,.22);box-shadow:0 0 0 1px rgba(247,220,146,.6)}
+.show-zones .z.h,.show-zones .z.v{background:rgba(90,170,255,.35);box-shadow:0 0 0 1px rgba(140,200,255,.8)}
+.show-zones .z.s{background:rgba(255,160,70,.4);box-shadow:0 0 0 1px rgba(255,190,120,.85)}
+.show-zones .z.p{background:rgba(247,220,146,.45);box-shadow:0 0 0 1px var(--gold-hi)}
+.show-zones .z.p.six{background:rgba(255,120,190,.45);box-shadow:0 0 0 1px #ff9fd2}
+.show-zones .z.p.edge{background:rgba(120,230,170,.45);box-shadow:0 0 0 1px #8ff0bd}
+
+/* chips */
+.chip{--c:#ddd;--e:#fff;--t:#111;position:relative;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:900;color:var(--t);flex:none;
+  background:radial-gradient(circle,var(--c) 0 52%,transparent 53%),repeating-conic-gradient(var(--e) 0 15deg,var(--c) 15deg 45deg);
+  box-shadow:0 0 0 1.5px rgba(0,0,0,.35),0 2px 3px rgba(0,0,0,.45)}
+.chip::after{content:"";position:absolute;inset:16%;border-radius:50%;border:1px dashed rgba(255,255,255,.55)}
+.c1{--c:#e9e6dc;--e:#7c8792;--t:#1c2228}.c5{--c:#c8313d;--e:#f4ecd8;--t:#fff}.c25{--c:#1d8a4d;--e:#f4ecd8;--t:#fff}.c100{--c:#1b1d20;--e:#e2bd62;--t:#e2bd62}.c500{--c:#6b3fa8;--e:#f4ecd8;--t:#fff}
+.cell .chip,.z .chip{position:absolute;width:22px;height:22px;font-size:10px;pointer-events:none;animation:drop .18s ease-out;z-index:2}
+.z .chip{width:20px;height:20px;font-size:9px}
+@keyframes drop{from{transform:translateY(-8px) scale(1.2);opacity:0}to{transform:none;opacity:1}}
+
+/* rail */
+.rail{width:64px;flex:none;display:flex;flex-direction:column;gap:6px}
+.jackbox{border-radius:12px;padding:6px 2px;text-align:center;background:linear-gradient(180deg,rgba(226,189,98,.22),rgba(226,189,98,.05));border:1px solid var(--line-2)}
+.jackbox span{display:block;font-size:7.5px;font-weight:800;letter-spacing:.14em;color:var(--gold)}
+.jackbox strong{display:block;font-family:var(--display);font-weight:900;font-size:17px;line-height:1.05;font-variant-numeric:tabular-nums}
+.prop{position:relative;border-radius:12px;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid var(--line);background:rgba(0,0,0,.22);transition:box-shadow .2s,opacity .2s}
+.coin{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:16px;color:#2a1d05;position:relative;flex:none}
+.coin::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5)}
+.coin.premium{background:conic-gradient(from 30deg,#f9e29a,#c8972f,#fff0b8,#a87a22,#f9e29a)}
+.coin.elite{background:conic-gradient(from 30deg,#f2f4f6,#9aa3ab,#ffffff,#7f8891,#f2f4f6)}
+.coin.classic{background:conic-gradient(from 30deg,#f0b98a,#9a5a2b,#ffd2a8,#7d4420,#f0b98a)}
+.coin svg{width:20px;height:20px}
+.prop .nm{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.prop .bet{font-size:10px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;height:12px;line-height:12px}
+.prop.locked{opacity:.42}
+.prop.won{box-shadow:0 0 0 1.5px var(--gold),0 0 16px rgba(226,189,98,.4)}
+.tools{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.tool{height:32px;border-radius:9px;border:1px solid var(--line);font-size:10px;font-weight:800;letter-spacing:.05em;background:rgba(0,0,0,.2);display:grid;place-items:center}
+.tool svg{width:16px;height:16px}
+.tool.wide{grid-column:1/3}
+.tool:disabled,.spin:disabled{opacity:.35}
+
+/* tray */
+.tray{flex:none;display:flex;align-items:center;gap:10px}
+.chips{flex:1;display:flex;justify-content:space-between;align-items:center;min-width:0}
+.chips .chip{width:46px;height:46px;font-size:15px;transition:transform .15s}
+.chips .chip.sel{transform:translateY(-6px);box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.6)}
+.spin{width:90px;height:60px;flex:none;border-radius:18px;background:linear-gradient(180deg,var(--gold-hi),var(--gold-deep));color:var(--on-gold);font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.04em;box-shadow:0 4px 0 #6d5016,0 8px 18px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.9}
+.spin small{font-family:var(--body);font-size:9px;font-weight:800;letter-spacing:.08em}
+.spin:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #6d5016}
+
+/* feedback */
+.banner{position:absolute;left:24px;right:24px;top:46%;transform:translateY(-50%);padding:14px 16px;border-radius:16px;background:rgba(7,17,13,.93);border:1px solid var(--gold);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:20;animation:pop .25s ease-out}
+.banner h3{margin:0;font-family:var(--display);font-weight:900;font-size:42px;line-height:1;color:var(--gold);letter-spacing:.02em}
+.banner h3.lose{color:var(--cream);font-size:26px}
+.banner h3.jp{font-size:48px;background:linear-gradient(180deg,#fff3c9,var(--gold) 55%,var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.banner p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
+.banner p b{color:var(--cream)}
+@keyframes pop{from{transform:translateY(-50%) scale(.85);opacity:0}}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);padding:8px 14px;border-radius:20px;background:#1b2a24;border:1px solid var(--line-2);font-size:12px;font-weight:700;white-space:nowrap;z-index:25}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:19}
+.confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(900px) rotate(720deg)}}
+
+/* sheet */
+.sheet{position:absolute;inset:0;background:rgba(3,8,6,.7);z-index:30;display:flex;align-items:flex-end}
+.panel{width:100%;max-height:88%;overflow:auto;background:var(--ink-2);border-top:1px solid var(--line-2);border-radius:22px 22px 0 0;padding:16px 18px 30px;box-sizing:border-box}
+.panel h2{font-family:var(--display);font-weight:900;font-size:28px;margin:0 0 4px;text-transform:uppercase;letter-spacing:.01em}
+.panel h4{font-size:10.5px;letter-spacing:.16em;color:var(--gold);margin:16px 0 6px}
+.panel p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 6px}
+.panel table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.panel td{padding:5px 0;border-bottom:1px solid rgba(233,205,140,.12)}
+.panel td:last-child{text-align:right;font-weight:800;color:var(--cream)}
+.panel .close{float:right}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(233,205,140,.12);font-size:13px;font-weight:700}
+.ghost{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--line-2);font-size:11px;font-weight:800;letter-spacing:.06em}
+.hist{display:grid;gap:4px}
+.hist div{display:flex;gap:4px}
+.hist .res{min-width:28px;font-size:13px}
+
+@media (prefers-reduced-motion:reduce){.cell .chip,.z .chip,.banner{animation:none}.confetti{display:none}}
+
+/* ---------- embed package: transparent page, phone frame only, no drop shadow ---------- */
+html,body,body.bare-body{background:transparent!important;overflow:hidden}
+.stage{padding:4px}
+.phone{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.18),inset 0 0 0 6px #0a0908,0 0 0 1px #000}
+
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <div class="stage">
+    <div class="phone-slot" id="phoneSlot">
+      <div class="phone">
+        <div class="glass">
+          <div class="island"></div>
+          <div class="statusbar"><span>9:41</span><span class="sb-r"><svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#f4ecd8"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#f4ecd8"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#f4ecd8"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#f4ecd8"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#f4ecd8" opacity=".5"/><rect x="2.5" y="2.5" width="16" height="7" rx="1.5" fill="#f4ecd8"/><rect x="24" y="4" width="1.6" height="4" rx=".8" fill="#f4ecd8" opacity=".5"/></svg></span></div>
+          <div class="app" id="app"></div>
+          <div class="homebar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+/* =========================================================
+   Roulette Rush — shared game code (prototype + toolkit)
+   ========================================================= */
+const RR = (() => {
+'use strict';
+const EU_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const US_ORDER = [0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,37,27,10,25,29,12,8,19,31,18,6,21,33,16,4,23,35,14,2];
+const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const WCOL = ['var(--w1)','var(--w2)','var(--w3)','var(--w4)','var(--w5)'];
+const CHIPS = [1,5,25,100,500];
+const JP_SEED = 25000;
+const LIMIT = { inside: 250, outside: 1000, bonus: 100 };
+const isGreen = n => n === 0 || n === 37;
+const lab = n => n === 37 ? '00' : String(n);
+const color = n => isGreen(n) ? 'g' : RED.has(n) ? 'r' : 'b';
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const short = n => n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0) + 'K' : String(n);
+const chipClass = v => v >= 500 ? 'c500' : v >= 100 ? 'c100' : v >= 25 ? 'c25' : v >= 5 ? 'c5' : 'c1';
+const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- bonus chips + paytables ---------- */
+const BONUS = [
+  { id: 'premium', name: 'Premium', mark: 'P', was: 'Cantor Chip', about: 'Progressive. Pays on green pockets (0 or 00) landing across the five wheels.' },
+  { id: 'elite', name: 'Elite', mark: 'E', was: 'Of A Kind Chip', about: 'Matching numbers across the five wheels, read like poker sets.' },
+  { id: 'classic', name: 'Classic', mark: 'C', was: 'Roulette Poker Chip', about: 'The five results read as a poker hand. Any green pocket breaks the hand.' },
+];
+const PAYS = {
+  eu: {
+    premium: [['Five greens', 'JP', 5], ['Four greens', 5000, 4], ['Three greens', 500, 3], ['Two greens', 50, 2], ['One green', 3, 1]],
+    elite: [['Five of a kind', 5000, '5'], ['Four of a kind', 500, '41'], ['Full house', 150, '32'], ['Three of a kind', 40, '311'], ['Two pair', 10, '221'], ['Pair', 1, '2111']],
+    classic: [['Straight', 250, 'straight'], ['Flush', 9, 'flush'], ['Sweep', 6, 'sweep']],
+  },
+  us: {
+    premium: [['Five greens', 'JP', 5], ['Four greens', 1000, 4], ['Three greens', 100, 3], ['Two greens', 12, 2], ['One green', 1, 1]],
+    elite: [['Five of a kind', 5000, '5'], ['Four of a kind', 500, '41'], ['Full house', 150, '32'], ['Three of a kind', 40, '311'], ['Two pair', 10, '221'], ['Pair', 1, '2111']],
+    classic: [['Straight', 250, 'straight'], ['Flush', 10, 'flush'], ['Sweep', 7, 'sweep']],
+  },
+};
+function evalBonus(type, rs) {
+  const P = PAYS[type], out = {};
+  const g = rs.filter(isGreen).length;
+  out.premium = P.premium.find(r => r[2] === g) || null;
+  const cnt = {}; rs.forEach(n => cnt[n] = (cnt[n] || 0) + 1);
+  const sig = Object.values(cnt).sort((a, b) => b - a).join('');
+  out.elite = P.elite.find(r => r[2] === sig) || null;
+  let h = null;
+  if (!rs.some(isGreen)) {
+    const s = [...rs].sort((a, b) => a - b);
+    if (new Set(s).size === 5 && s[4] - s[0] === 4) h = 'straight';
+    else if (rs.every(n => RED.has(n)) || rs.every(n => !RED.has(n))) h = 'flush';
+    else if (rs.every(n => n % 2) || rs.every(n => !(n % 2))) h = 'sweep';
+  }
+  out.classic = h ? P.classic.find(r => r[2] === h) : null;
+  return out;
+}
+/* exact odds for the toolkit */
+function bonusOdds(type) {
+  const N = type === 'us' ? 38 : 37, z = type === 'us' ? 2 : 1, T = N ** 5;
+  const C = (n, k) => { let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; };
+  const ff = (n, k) => { let r = 1; for (let i = 0; i < k; i++) r *= n - i; return r; };
+  const fact = k => k <= 1 ? 1 : k * fact(k - 1);
+  const prem = {}; for (let k = 1; k <= 5; k++) prem[k] = C(5, k) * (z / N) ** k * (1 - z / N) ** (5 - k);
+  const el = {};
+  for (const sig of ['5', '41', '32', '311', '221', '2111']) {
+    const g = sig.split('').map(Number), m = {}; g.forEach(k => m[k] = (m[k] || 0) + 1);
+    let d = 1; g.forEach(k => d *= fact(k)); Object.values(m).forEach(c => d *= fact(c));
+    el[sig] = fact(5) / d * ff(N, g.length) / T;
+  }
+  const flush = 2 * 18 ** 5 / T, both = (2 * 10 ** 5 + 2 * 8 ** 5) / T;
+  const cl = { straight: 32 * 120 / T, flush, sweep: flush - both };
+  const P = PAYS[type], rtp = {};
+  rtp.premium = P.premium.reduce((a, r) => a + prem[r[2]] * ((r[1] === 'JP' ? JP_SEED : r[1]) + 1), 0);
+  rtp.elite = P.elite.reduce((a, r) => a + el[r[2]] * (r[1] + 1), 0);
+  rtp.classic = P.classic.reduce((a, r) => a + cl[r[2]] * (r[1] + 1), 0);
+  return { prem, el, cl, rtp };
+}
+
+/* ---------- bet definitions + hit zones ---------- */
+function buildDefs(type) {
+  const D = {};
+  const add = (key, kind, nums, ret, zone) => D[key] = { key, kind, nums, ret, zone };
+  const nAt = (r, c) => (r - 1) * 3 + c + 1;
+  for (let n = 1; n <= 36; n++) add('n' + n, 'Straight', [n], 36);
+  add('n0', 'Straight', [0], 36);
+  if (type === 'us') add('n37', 'Straight', [37], 36);
+  for (let r = 1; r <= 12; r++) {
+    for (let c = 0; c < 2; c++) { const n = nAt(r, c); add(`sp${n}-${n + 1}`, 'Split', [n, n + 1], 18, { s: 'v', x: c + 1, y: r + .5 }); }
+    add('st' + r, 'Street', [nAt(r, 0), nAt(r, 1), nAt(r, 2)], 12, { s: 's', x: 0, y: r + .5 });
+    if (r < 12) {
+      for (let c = 0; c < 3; c++) { const n = nAt(r, c); add(`sp${n}-${n + 3}`, 'Split', [n, n + 3], 18, { s: 'h', x: c + .5, y: r + 1 }); }
+      for (let c = 0; c < 2; c++) { const n = nAt(r, c); add(`co${n}`, 'Corner', [n, n + 1, n + 3, n + 4], 9, { s: 'p', x: c + 1, y: r + 1 }); }
+      add('sl' + r, 'Six line', [nAt(r, 0), nAt(r, 0) + 1, nAt(r, 0) + 2, nAt(r, 0) + 3, nAt(r, 0) + 4, nAt(r, 0) + 5], 6, { s: 'p', x: 0, y: r + 1, cls: 'six' });
+    }
+  }
+  if (type === 'eu') {
+    add('sp0-1', 'Split', [0, 1], 18, { s: 'h', x: .5, y: 1 });
+    add('sp0-2', 'Split', [0, 2], 18, { s: 'h', x: 1.5, y: 1 });
+    add('sp0-3', 'Split', [0, 3], 18, { s: 'h', x: 2.5, y: 1 });
+    add('tr012', 'Trio', [0, 1, 2], 12, { s: 'p', x: 1, y: 1, cls: 'edge' });
+    add('tr023', 'Trio', [0, 2, 3], 12, { s: 'p', x: 2, y: 1, cls: 'edge' });
+    add('basket', 'First four', [0, 1, 2, 3], 9, { s: 'p', x: 0, y: 1, cls: 'edge' });
+  } else {
+    add('sp0-1', 'Split', [0, 1], 18, { s: 'h', x: .5, y: 1 });
+    add('sp37-3', 'Split', [37, 3], 18, { s: 'h', x: 2.5, y: 1 });
+    add('sp0-37', 'Split', [0, 37], 18, { s: 'v', x: 1.5, y: .5 });
+    add('tr012', 'Trio', [0, 1, 2], 12, { s: 'p', x: 1, y: 1, cls: 'edge' });
+    add('tr0372', 'Trio', [0, 37, 2], 12, { s: 'p', x: 1.5, y: 1, cls: 'edge' });
+    add('tr3723', 'Trio', [37, 2, 3], 12, { s: 'p', x: 2, y: 1, cls: 'edge' });
+    add('topline', 'Top line', [0, 37, 1, 2, 3], 7, { s: 'p', x: 0, y: 1, cls: 'edge' });
+  }
+  const R = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  const all = R(1, 36);
+  add('d1', 'Dozen', R(1, 12), 3); add('d2', 'Dozen', R(13, 24), 3); add('d3', 'Dozen', R(25, 36), 3);
+  add('c1', 'Column', all.filter(n => n % 3 === 1), 3); add('c2', 'Column', all.filter(n => n % 3 === 2), 3); add('c3', 'Column', all.filter(n => n % 3 === 0), 3);
+  add('red', 'Red', all.filter(n => RED.has(n)), 2); add('black', 'Black', all.filter(n => !RED.has(n)), 2);
+  add('odd', 'Odd', all.filter(n => n % 2), 2); add('even', 'Even', all.filter(n => !(n % 2)), 2);
+  add('low', '1 to 18', R(1, 18), 2); add('high', '19 to 36', R(19, 36), 2);
+  return D;
+}
+const isOutside = d => d.ret <= 3;
+
+/* ---------- icons ---------- */
+const ICON = {
+  sound: '<svg viewBox="0 0 24 24" class="ic"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  mute: '<svg viewBox="0 0 24 24" class="ic"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" class="ic"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" class="ic"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  clear: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  double: '<svg viewBox="0 0 24 24" class="ic"><path d="M5 7l6 10M11 7l-6 10M15 9a2.5 2.5 0 1 1 4.5 1.5L15 17h5"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" class="ic"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  close: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  repeat: '<svg viewBox="0 0 24 24" class="ic"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>',
+};
+const LOGO = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="48" fill="#5a3a1c"/><circle r="44" fill="none" stroke="#e2bd62" stroke-width="3"/>' +
+  Array.from({ length: 12 }, (_, i) => `<path d="M0 0 L${(40 * Math.sin(i * Math.PI / 6)).toFixed(1)} ${(-40 * Math.cos(i * Math.PI / 6)).toFixed(1)} A40 40 0 0 1 ${(40 * Math.sin((i + 1) * Math.PI / 6)).toFixed(1)} ${(-40 * Math.cos((i + 1) * Math.PI / 6)).toFixed(1)}Z" fill="${i === 0 ? '#1f9a57' : i % 2 ? '#c9313d' : '#16191b'}"/>`).join('') +
+  '<circle r="22" fill="#2a1a0c" stroke="#e2bd62" stroke-width="2"/><path d="M-8 -12 L10 -2 L-2 2 L8 14 L-10 2 L2 -2Z" fill="#e2bd62"/></svg>';
+
+/* ---------- wheel ---------- */
+function wheelSVG(type, uid) {
+  const order = type === 'us' ? US_ORDER : EU_ORDER, N = order.length, step = 360 / N;
+  const P = (rad, deg) => { const a = (deg - 90) * Math.PI / 180; return `${(rad * Math.cos(a)).toFixed(2)} ${(rad * Math.sin(a)).toFixed(2)}`; };
+  const ring = (R1, R2, a0, a1) => `M${P(R2, a0)} A${R2} ${R2} 0 0 1 ${P(R2, a1)} L${P(R1, a1)} A${R1} ${R1} 0 0 0 ${P(R1, a0)}Z`;
+  const fill = n => isGreen(n) ? ['#1f9a57', '#157040'] : RED.has(n) ? ['#c9313d', '#8f1f28'] : ['#1b1e21', '#0c0d0f'];
+  let s = `<svg class="wsvg" viewBox="-50 -50 100 100" aria-hidden="true"><defs>
+    <radialGradient id="wood${uid}" cx=".5" cy=".5" r=".5"><stop offset=".86" stop-color="#3a2410"/><stop offset=".93" stop-color="#7a4f26"/><stop offset="1" stop-color="#2c1a0a"/></radialGradient>
+    <radialGradient id="cone${uid}" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#6b4522"/><stop offset="1" stop-color="#2a1708"/></radialGradient>
+    <radialGradient id="hub${uid}" cx=".38" cy=".33" r=".7"><stop offset="0" stop-color="#fff3c4"/><stop offset=".55" stop-color="#c99a3a"/><stop offset="1" stop-color="#6d5016"/></radialGradient></defs>
+    <circle r="50" fill="url(#wood${uid})"/><circle r="46.2" fill="#170d05"/><circle r="42.4" fill="none" stroke="#e2bd62" stroke-width=".7"/><g class="rot">`;
+  order.forEach((n, i) => {
+    const a0 = i * step - step / 2, a1 = i * step + step / 2, [f1, f2] = fill(n);
+    s += `<path d="${ring(34, 42, a0, a1)}" fill="${f1}"/><path d="${ring(27, 34, a0, a1)}" fill="${f2}"/>`;
+    s += `<text transform="rotate(${(i * step).toFixed(2)}) translate(0 -38)" text-anchor="middle" dominant-baseline="central" font-size="${n === 37 ? 3.6 : 4.4}" font-weight="800" fill="#fff" font-family="Manrope,sans-serif">${lab(n)}</text>`;
+    s += `<line x1="0" y1="-27" x2="0" y2="-42" stroke="#e2bd62" stroke-width=".35" transform="rotate(${a0.toFixed(2)})"/>`;
+  });
+  s += `<circle r="27" fill="url(#cone${uid})" stroke="#e2bd62" stroke-width=".6"/>`;
+  for (let k = 0; k < 4; k++) s += `<rect x="-1.3" y="-20" width="2.6" height="40" rx="1.3" fill="#d9b45a" transform="rotate(${k * 45})"/>`;
+  s += `<circle r="8" fill="url(#hub${uid})"/><circle r="2.4" fill="#fff6d8"/></g>`;
+  s += `<circle class="ball" r="2.7" fill="#fbfbf8" stroke="#a9a9a2" stroke-width=".4" transform="rotate(0) translate(0 -30.5)"/>`;
+  s += `<path d="M-3.4 -50 L3.4 -50 L0 -44.5Z" fill="#e2bd62"/></svg>`;
+  return s;
+}
+const chipHTML = (v, extra = '') => `<span class="chip ${chipClass(v)} ${extra}">${short(v)}</span>`;
+
+/* ---------- table (shared by game and toolkit) ---------- */
+function buildTable(el, type, onPick, onCover) {
+  el.innerHTML = '';
+  const D = buildDefs(type), hosts = {}, cells = {};
+  const mk = (key, cls, html, col, row) => {
+    const d = document.createElement('button'); d.type = 'button'; d.className = 'cell ' + cls; d.dataset.k = key; d.innerHTML = html;
+    d.style.gridColumn = col; d.style.gridRow = row; el.appendChild(d); hosts[key] = d; return d;
+  };
+  const note = (txt, col, row, id) => { const d = document.createElement('div'); d.className = 'cell note'; d.style.gridColumn = col; d.style.gridRow = row; d.textContent = txt; if (id) d.dataset.role = id; el.appendChild(d); };
+  if (type === 'eu') cells[0] = mk('n0', 'zero', '0', '3/9', '1');
+  else { cells[0] = mk('n0', 'zero l', '0', '3/6', '1'); cells[37] = mk('n37', 'zero rr', '00', '6/9', '1'); }
+  for (let n = 1; n <= 36; n++) { const row = Math.ceil(n / 3) + 1, c = (n - 1) % 3; cells[n] = mk('n' + n, 'n ' + color(n), n, `${3 + c * 2}/span 2`, String(row)); }
+  [['d1', '1st 12', 2], ['d2', '2nd 12', 6], ['d3', '3rd 12', 10]].forEach(([k, l, r]) => mk(k, 'out', `<span class="v">${l}</span>`, '2', `${r}/span 4`));
+  [['low', '1–18'], ['even', 'EVEN'], ['red', ''], ['black', ''], ['odd', 'ODD'], ['high', '19–36']].forEach(([k, l], i) => {
+    const html = k === 'red' ? '<span class="diamond" style="background:var(--red)"></span>' : k === 'black' ? '<span class="diamond" style="background:#000;box-shadow:0 0 0 1px #fff"></span>' : `<span class="v">${l}</span>`;
+    mk(k, 'out', html, '1', `${2 + i * 2}/span 2`);
+  });
+  ['c1', 'c2', 'c3'].forEach((k, i) => mk(k, 'col', '2:1', `${3 + i * 2}/span 2`, '14'));
+  note(type === 'eu' ? 'SINGLE\nZERO' : 'DOUBLE\nZERO', '1/3', '1');
+  note('', '1/3', '14', 'amt');
+  const zl = document.createElement('div'); zl.className = 'zones'; el.appendChild(zl);
+  for (const k in D) {
+    const z = D[k].zone; if (!z) continue;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'z ' + z.s + (z.cls ? ' ' + z.cls : ''); b.dataset.k = k;
+    b.style.left = (z.x / 3 * 100) + '%'; b.style.top = (z.y / 13 * 100) + '%';
+    b.setAttribute('aria-label', `${D[k].kind} ${D[k].nums.map(lab).join(', ')}`);
+    zl.appendChild(b); hosts[k] = b;
+  }
+  const cover = (k, on) => { if (!D[k]) return; D[k].nums.forEach(n => cells[n] && cells[n].classList.toggle('cover', on)); onCover && onCover(on ? D[k] : null); };
+  Object.entries(hosts).forEach(([k, h]) => {
+    if (onPick) h.addEventListener('click', () => onPick(k));
+    h.addEventListener('pointerenter', () => cover(k, true));
+    h.addEventListener('pointerleave', () => cover(k, false));
+    h.addEventListener('pointerdown', () => cover(k, true));
+    h.addEventListener('pointerup', () => setTimeout(() => cover(k, false), 160));
+    h.addEventListener('focus', () => cover(k, true));
+    h.addEventListener('blur', () => cover(k, false));
+  });
+  if (!onPick) Object.values(hosts).forEach(h => h.tabIndex = -1);
+  return { D, hosts, cells, amt: el.querySelector('[data-role=amt]') };
+}
+
+/* ---------- sound (synthesized, no files) ---------- */
+const Sound = {
+  ctx: null, master: null, on: true, _last: 0,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = .5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; }
+    this.load();
+  },
+  /* Sound files: sound/<name>.mp3 next to index.html. Any file that fails to load falls back to the synthesized recipe below. */
+  base: 'sound/', files: {}, loading: false,
+  NAMES: ['tap', 'chip', 'spin', 'tick', 'land', 'win', 'bigwin', 'bonus', 'jackpot', 'lose', 'error'],
+  load() {
+    if (this.loading || !this.ctx || location.protocol === 'file:') return; this.loading = true;
+    this.NAMES.forEach(n => fetch(this.base + n + '.mp3').then(r => r.ok ? r.arrayBuffer() : Promise.reject())
+      .then(b => new Promise((res, rej) => this.ctx.decodeAudioData(b, res, rej))).then(a => { this.files[n] = a; }).catch(() => {}));
+  },
+  play(n, { rate = 1, g = 1 } = {}) {
+    const b = this.files[n]; if (!b) return false;
+    if (this.ok()) { const src = this.ctx.createBufferSource(), v = this.ctx.createGain(); src.buffer = b; src.playbackRate.value = rate; v.gain.value = g * 2; src.connect(v); v.connect(this.master); src.start(); }
+    return true;
+  },
+  ok() { return this.on && this.ctx && this.ctx.state === 'running'; },
+  tone(f, d, { type = 'sine', g = .2, at = 0, to = null } = {}) {
+    if (!this.ok()) return;
+    const c = this.ctx, t = c.currentTime + at, o = c.createOscillator(), v = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (to) o.frequency.exponentialRampToValueAtTime(to, t + d);
+    v.gain.setValueAtTime(.0001, t); v.gain.exponentialRampToValueAtTime(g, t + .006); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(this.master); o.start(t); o.stop(t + d + .03);
+  },
+  noise(d, { g = .2, f = 2000, q = 1, at = 0, sweep = null } = {}) {
+    if (!this.ok()) return;
+    const c = this.ctx, t = c.currentTime + at, len = Math.max(1, c.sampleRate * d | 0), buf = c.createBuffer(1, len, c.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = c.createBufferSource(), bp = c.createBiquadFilter(), v = c.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.Q.value = q; bp.frequency.setValueAtTime(f, t); if (sweep) bp.frequency.exponentialRampToValueAtTime(sweep, t + d);
+    v.gain.value = g; src.connect(bp); bp.connect(v); v.connect(this.master); src.start(t);
+  },
+  tap() { if (this.play('tap')) return; this.tone(1400, .03, { type: 'triangle', g: .05 }); },
+  chip(v = 5) { const p = 1 + Math.log10(Math.max(1, v)) * -.08; if (this.play('chip', { rate: p })) return; this.noise(.035, { g: .5, f: 3200 * p, q: 3 }); this.tone(2100 * p, .05, { type: 'triangle', g: .06 }); this.noise(.03, { g: .3, f: 2400 * p, q: 3, at: .045 }); },
+  spin() { if (this.play('spin')) return; this.noise(.9, { g: .16, f: 500, q: .7, sweep: 2600 }); this.tone(180, .5, { type: 'sine', g: .06, to: 90 }); },
+  tick() { const n = performance.now(); if (n - this._last < 28) return; this._last = n; if (this.play('tick', { rate: .9 + Math.random() * .25 })) return; this.noise(.014, { g: .28, f: 4200, q: 4 }); this.tone(2600 + Math.random() * 600, .012, { type: 'square', g: .012 }); },
+  land() { if (this.play('land')) return; this.noise(.05, { g: .45, f: 1700, q: 2 }); this.tone(520, .1, { type: 'triangle', g: .1, to: 260 }); },
+  win(big) { if (this.play(big ? 'bigwin' : 'win')) return; [523, 659, 784, 1047, big ? 1319 : 0, big ? 1568 : 0].forEach((f, k) => f && this.tone(f, .34, { type: 'triangle', g: .12, at: k * .085 })); },
+  bonus() { if (this.play('bonus')) return; [1568, 2093, 2637, 3136].forEach((f, k) => this.tone(f, .4, { g: .06, at: k * .07 })); },
+  jackpot() { if (this.play('jackpot')) return; [523, 659, 784, 1047, 784, 1047, 1319, 1568, 2093].forEach((f, k) => { this.tone(f, .5, { type: 'triangle', g: .13, at: k * .11 }); this.tone(f / 2, .5, { type: 'sine', g: .06, at: k * .11 }); }); },
+  lose() { if (this.play('lose')) return; this.tone(330, .16, { type: 'triangle', g: .07 }); this.tone(247, .26, { type: 'triangle', g: .07, at: .12 }); },
+  error() { if (this.play('error')) return; this.tone(150, .14, { type: 'square', g: .04 }); },
+};
+
+/* ---------- the game ---------- */
+function mountGame(root, opts = {}) {
+  const q = s => root.querySelector(s), qa = s => [...root.querySelectorAll(s)];
+  const store = opts.storeKey || 'roulette-rush';
+  let S = {
+    type: 'eu', balance: 5000, chip: 5, active: [true, true, true, true, true],
+    bets: { n17: 5, 'co14': 5, red: 25, d2: 10 }, props: { premium: 1, elite: 5, classic: 0 },
+    jackpot: JP_SEED, results: [23, 10, 5, 24, 16], paid: [null, null, null, null, null],
+    history: [], undo: [], last: null, spinning: false, sound: true,
+  };
+  try { const s = JSON.parse(localStorage.getItem(store) || 'null'); if (s) { Object.assign(S, { balance: s.balance, jackpot: s.jackpot, sound: s.sound !== false }); if (s.type === 'us') { S.type = 'us'; S.bets = { n17: 5, red: 25, d2: 10 }; } } } catch (e) {}
+  if (!(S.balance > 0)) S.balance = 5000;
+  Sound.on = S.sound;
+  const save = () => { try { localStorage.setItem(store, JSON.stringify({ balance: S.balance, jackpot: S.jackpot, type: S.type, sound: S.sound })); } catch (e) {} };
+  const W = [0, 1, 2, 3, 4].map(() => ({ angle: 0 }));
+  let T = null;
+  const order = () => S.type === 'us' ? US_ORDER : EU_ORDER;
+  const nActive = () => S.active.filter(Boolean).length;
+  const layoutTotal = () => sum(S.bets);
+  const totalBet = () => layoutTotal() * nActive() + sum(S.props);
+
+  root.innerHTML = `
+  <header class="topbar">
+    <div class="logo">${LOGO}<div class="wordmark">Roulette<i>Rush</i></div></div>
+    <div class="meter"><span>CREDITS</span><strong data-r="bal">0</strong></div>
+    <div class="meter"><span>BET</span><strong data-r="tot">0</strong></div>
+    <button class="iconbtn" data-r="snd" aria-label="Sound"></button>
+    <button class="iconbtn" data-r="menu" aria-label="Rules and settings">${ICON.menu}</button>
+  </header>
+  <section class="rack" data-r="rack" aria-label="Wheels. Tap a wheel to turn it on or off"></section>
+  <div class="strip">
+    <span class="lbl">WHEELS</span><div class="seg" data-r="count" role="group" aria-label="Wheels in play"></div>
+    <span class="grow"></span>
+    <div class="seg" data-r="type" role="group" aria-label="Table">
+      <button data-t="eu">0<small>EURO</small></button><button data-t="us">00<small>US</small></button>
+    </div>
+  </div>
+  <div class="tablewrap">
+    <div class="table" data-r="table"></div>
+    <aside class="rail">
+      <div class="jackbox"><span>JACKPOT</span><strong data-r="jack">0</strong></div>
+      ${BONUS.map(b => `<button class="prop" data-prop="${b.id}" aria-label="${b.name} bonus chip"><span class="coin ${b.id}">${b.mark}</span><span class="nm">${b.name}</span><span class="bet" data-b="${b.id}"></span></button>`).join('')}
+      <div class="tools">
+        <button class="tool" data-r="undo" aria-label="Undo">${ICON.undo}</button>
+        <button class="tool" data-r="dbl" aria-label="Double bets">${ICON.double}</button>
+        <button class="tool wide" data-r="clear">CLEAR</button>
+      </div>
+    </aside>
+  </div>
+  <div class="tray">
+    <div class="chips" data-r="chips">${CHIPS.map(v => `<button class="chip ${chipClass(v)}" data-v="${v}" aria-label="Chip ${v}">${v}</button>`).join('')}</div>
+    <button class="spin" data-r="spin">SPIN<small data-r="sub">5 WHEELS</small></button>
+  </div>
+  <div class="confetti" data-r="confetti"></div>`;
+  const R = k => q(`[data-r="${k}"]`);
+
+  function buildRack() {
+    const rack = R('rack'); rack.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const c = document.createElement('button'); c.className = 'wcard'; c.setAttribute('aria-label', 'Wheel ' + (i + 1));
+      c.innerHTML = `<span class="badge" style="background:${WCOL[i]}">${i + 1}</span>${wheelSVG(S.type, (opts.uid || 'g') + i)}<span class="res">–</span><span class="paid"></span>`;
+      c.onclick = () => toggleWheel(i);
+      rack.appendChild(c);
+      W[i].el = c; W[i].rot = c.querySelector('.rot'); W[i].ball = c.querySelector('.ball');
+      W[i].angle = 0;
+      if (S.results[i] != null) setInstant(i, S.results[i]);
+    }
+    const cnt = R('count'); cnt.innerHTML = '';
+    for (let n = 1; n <= 5; n++) { const b = document.createElement('button'); b.textContent = n; b.setAttribute('aria-label', n + (n > 1 ? ' wheels' : ' wheel')); b.onclick = () => setCount(n); cnt.appendChild(b); }
+  }
+  const stepDeg = () => 360 / order().length;
+  function setInstant(i, n) {
+    const idx = order().indexOf(n); W[i].angle = -idx * stepDeg();
+    W[i].rot.setAttribute('transform', `rotate(${W[i].angle})`);
+    W[i].ball.setAttribute('transform', 'rotate(0) translate(0 -30.5)');
+  }
+  function buildLayout() { T = buildTable(R('table'), S.type, place); }
+
+  /* betting */
+  function snapshot() { S.undo.push(JSON.stringify({ bets: S.bets, props: S.props })); if (S.undo.length > 50) S.undo.shift(); }
+  function toast(msg) { q('.toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; root.appendChild(t); clearTimeout(toast.t); toast.t = setTimeout(() => t.remove(), 1800); Sound.error(); }
+  function place(key) {
+    Sound.init(); if (S.spinning) return;
+    clearMarks();
+    const d = T.D[key], v = S.chip, cur = S.bets[key] || 0, lim = isOutside(d) ? LIMIT.outside : LIMIT.inside;
+    if (cur + v > lim) return toast(`${d.kind} limit is ${fmt(lim)} a spot`);
+    if (totalBet() + v * nActive() > S.balance) return toast('Not enough credits for that chip');
+    snapshot(); S.bets[key] = cur + v; Sound.chip(v); render();
+  }
+  function placeProp(p) {
+    Sound.init(); if (S.spinning) return;
+    if (nActive() < 5) return toast('Turn on all 5 wheels to unlock bonus chips');
+    if (S.props[p] + S.chip > LIMIT.bonus) return toast(`Bonus chip limit is ${LIMIT.bonus}`);
+    if (totalBet() + S.chip > S.balance) return toast('Not enough credits for that chip');
+    snapshot(); S.props[p] += S.chip; Sound.chip(S.chip); render();
+  }
+  function toggleWheel(i) { Sound.init(); if (S.spinning) return; S.active[i] = !S.active[i]; if (!nActive()) S.active[i] = true; Sound.tap(); afterWheels(); }
+  function setCount(n) { Sound.init(); if (S.spinning) return; S.active = S.active.map((_, i) => i < n); Sound.tap(); afterWheels(); }
+  function afterWheels() {
+    if (nActive() < 5 && sum(S.props) > 0) { S.props = { premium: 0, elite: 0, classic: 0 }; toast('Bonus chips came off. They need all 5 wheels'); }
+    if (totalBet() > S.balance) { S.bets = {}; toast('Bets cleared. Not enough credits for that many wheels'); }
+    render();
+  }
+  function setType(t) {
+    Sound.init(); if (S.spinning || t === S.type) return;
+    S.type = t; S.bets = {}; S.props = { premium: 0, elite: 0, classic: 0 }; S.undo = []; S.last = null;
+    S.results = [null, null, null, null, null]; S.paid = [null, null, null, null, null];
+    Sound.tap(); buildRack(); buildLayout(); render(); save();
+    toastInfo(t === 'us' ? 'American table: 0 and 00' : 'European table: single 0');
+  }
+  function toastInfo(msg) { q('.toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; root.appendChild(t); clearTimeout(toast.t); toast.t = setTimeout(() => t.remove(), 1600); }
+
+  /* render */
+  function render() {
+    R('bal').textContent = fmt(S.balance); R('tot').textContent = fmt(totalBet()); R('jack').textContent = fmt(S.jackpot);
+    for (const k in T.hosts) {
+      const h = T.hosts[k], v = S.bets[k]; let c = h.querySelector(':scope > .chip');
+      if (v) { if (!c) { c = document.createElement('span'); h.appendChild(c); } c.className = 'chip ' + chipClass(v); c.textContent = short(v); }
+      else if (c) c.remove();
+    }
+    const n = nActive();
+    T.amt.textContent = layoutTotal() ? `${fmt(layoutTotal())} × ${n}` : 'TAP LINES\nFOR SPLITS';
+    T.amt.style.whiteSpace = 'pre-line';
+    W.forEach((w, i) => w.el.classList.toggle('off', !S.active[i]));
+    [...R('count').children].forEach((b, i) => { b.classList.toggle('on', i + 1 === n); b.setAttribute('aria-pressed', i + 1 === n); });
+    [...R('type').children].forEach(b => { b.classList.toggle('on', b.dataset.t === S.type); b.setAttribute('aria-pressed', b.dataset.t === S.type); });
+    qa('.prop').forEach(p => { const k = p.dataset.prop; p.classList.toggle('locked', n < 5); q(`[data-b="${k}"]`).textContent = S.props[k] ? fmt(S.props[k]) : n < 5 ? '5 wheels' : ''; });
+    qa('[data-r=chips] .chip').forEach(c => c.classList.toggle('sel', +c.dataset.v === S.chip));
+    const empty = totalBet() === 0;
+    R('sub').textContent = empty && S.last ? 'REPEAT' : `${n} WHEEL${n > 1 ? 'S' : ''}`;
+    R('spin').disabled = S.spinning || (empty && !S.last);
+    R('undo').disabled = S.spinning || !S.undo.length; R('clear').disabled = S.spinning || empty; R('dbl').disabled = S.spinning || empty;
+    R('snd').innerHTML = S.sound ? ICON.sound : ICON.mute; R('snd').setAttribute('aria-pressed', S.sound);
+    W.forEach((w, i) => {
+      const r = S.results[i], el = w.el.querySelector('.res'), pd = w.el.querySelector('.paid');
+      el.className = 'res' + (r == null ? '' : ' ' + color(r)); el.textContent = r == null ? '–' : lab(r);
+      const p = S.paid[i]; pd.className = 'paid' + (p > 0 ? ' win' : ''); pd.textContent = p == null ? '' : p > 0 ? '+' + fmt(p) : '—';
+    });
+  }
+  function clearMarks() { qa('.cell.lit').forEach(c => c.classList.remove('lit')); qa('.marks').forEach(m => m.remove()); qa('.wcard.hit,.prop.won').forEach(e => e.classList.remove('hit', 'won')); q('.banner')?.remove(); }
+
+  /* spin */
+  const rnd = () => { const N = order().length, a = new Uint32Array(1), lim = Math.floor(4294967296 / N) * N; do crypto.getRandomValues(a); while (a[0] >= lim); return order()[a[0] % N]; };
+  const bounce = x => { const n = 7.5625, d = 2.75; if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + .75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + .9375; return n * (x -= 2.625 / d) * x + .984375; };
+  function animate(i, result, dur) {
+    return new Promise(done => {
+      const w = W[i], st = stepDeg(), idx = order().indexOf(result);
+      const target = -idx * st, a0 = w.angle;
+      const delta = ((target - a0) % 360 + 360) % 360, a1 = a0 + delta + 360 * (3 + (i % 2));
+      if (reduced()) { setTimeout(() => { w.angle = a1 % 360; w.rot.setAttribute('transform', `rotate(${w.angle})`); w.ball.setAttribute('transform', 'rotate(0) translate(0 -30.5)'); done(); }, 300 + i * 80); return; }
+      const t0 = performance.now(); let lastFret = null;
+      const frame = now => {
+        const t = Math.min(1, (now - t0) / (dur * 1000));
+        const e = 1 - Math.pow(1 - t, 3);
+        w.angle = a0 + (a1 - a0) * e;
+        w.rot.setAttribute('transform', `rotate(${w.angle.toFixed(2)})`);
+        const eb = 1 - Math.pow(1 - t, 2.4), ba = (1 - eb) * -1800;
+        let br;
+        if (t < .06) br = 30.5 + (44 - 30.5) * (t / .06);
+        else if (t < .64) br = 44;
+        else br = 44 - (44 - 30.5) * bounce((t - .64) / .36);
+        w.ball.setAttribute('transform', `rotate(${ba.toFixed(2)}) translate(0 ${(-br).toFixed(2)})`);
+        if (t > .64) { const fret = Math.floor((ba - w.angle) / st); if (lastFret !== null && fret !== lastFret) Sound.tick(); lastFret = fret; }
+        if (t < 1) requestAnimationFrame(frame);
+        else { w.angle = a1 % 360; done(); }
+      };
+      requestAnimationFrame(frame);
+    });
+  }
+  async function spin() {
+    Sound.init(); if (S.spinning) return;
+    if (totalBet() === 0 && S.last) {
+      const L = JSON.parse(S.last), five = nActive() === 5;
+      const need = sum(L.bets) * nActive() + (five ? sum(L.props) : 0);
+      if (need > S.balance) return toast('Not enough credits to repeat that bet');
+      S.bets = L.bets; S.props = five ? L.props : { premium: 0, elite: 0, classic: 0 };
+    }
+    const tb = totalBet(); if (!tb) return;
+    if (tb > S.balance) return toast('Not enough credits');
+    clearMarks();
+    S.last = JSON.stringify({ bets: S.bets, props: S.props });
+    S.balance -= tb; S.spinning = true; S.undo = [];
+    S.jackpot += S.props.premium * .3 + 2;
+    const res = S.active.map(a => a ? rnd() : null);
+    S.results = S.results.map((r, i) => S.active[i] ? null : r); S.paid = [null, null, null, null, null];
+    render(); Sound.spin();
+    await Promise.all(res.map((r, i) => r == null ? null : animate(i, r, 3.1 + i * .42).then(() => { S.results[i] = r; Sound.land(); render(); })));
+    settle(res, tb);
+  }
+  function settle(res, tb) {
+    const bets = S.bets, props = S.props; let total = 0; const lines = []; let jp = false, bonusHit = false;
+    res.forEach((r, i) => {
+      if (r == null) return;
+      let w = 0; for (const k in bets) { const d = T.D[k]; if (d.nums.includes(r)) w += bets[k] * d.ret; }
+      S.paid[i] = w; total += w; if (w > 0) W[i].el.classList.add('hit');
+      mark(r, i);
+    });
+    if (nActive() === 5) {
+      const ev = evalBonus(S.type, res);
+      BONUS.forEach(b => {
+        const h = ev[b.id], bet = props[b.id];
+        if (h && bet) {
+          let w; if (h[1] === 'JP') { w = S.jackpot; S.jackpot = JP_SEED; jp = true; } else w = bet * (h[1] + 1);
+          total += w; bonusHit = true; lines.push(`<b>${b.name}</b> · ${h[0]} +${fmt(w)}`); q(`.prop[data-prop=${b.id}]`).classList.add('won');
+        } else if (h) lines.push(`${h[0]} landed. No ${b.name} chip on it`);
+      });
+    }
+    S.balance += total; S.history.unshift(res.slice()); S.history = S.history.slice(0, 10);
+    S.bets = {}; S.props = { premium: 0, elite: 0, classic: 0 }; S.spinning = false; save();
+    render(); banner(total, tb, lines, jp);
+    if (jp) Sound.jackpot(); else if (total >= tb * 5) Sound.win(true); else if (total > 0) Sound.win(false); else Sound.lose();
+    if (bonusHit && !jp) setTimeout(() => Sound.bonus(), 420);
+    if (jp || total >= tb * 5) confetti(jp ? 90 : 46);
+  }
+  function mark(n, i) {
+    const c = T.cells[n]; if (!c) return; c.classList.add('lit');
+    let m = c.querySelector('.marks'); if (!m) { m = document.createElement('span'); m.className = 'marks'; c.appendChild(m); }
+    const d = document.createElement('span'); d.className = 'mk'; d.style.background = WCOL[i]; d.textContent = i + 1; m.appendChild(d);
+  }
+  function banner(total, tb, lines, jp) {
+    const b = document.createElement('div'); b.className = 'banner';
+    const net = total - tb;
+    b.innerHTML = jp ? `<h3 class="jp">JACKPOT</h3><p><b>+${fmt(total)}</b><br>${lines.join('<br>')}</p>`
+      : total > 0 ? `<h3>WIN ${fmt(total)}</h3><p>${net >= 0 ? 'Up ' + fmt(net) : 'Bet ' + fmt(tb)} this spin${lines.length ? '<br>' + lines.join('<br>') : ''}</p>`
+      : `<h3 class="lose">No win this spin</h3><p>${lines.length ? lines.join('<br>') + '<br>' : ''}Tap SPIN to repeat your bet.</p>`;
+    b.onclick = () => b.remove(); root.appendChild(b);
+    setTimeout(() => b.remove(), jp ? 5000 : total > 0 ? 3200 : 2000);
+  }
+  function confetti(n) {
+    if (reduced()) return;
+    const c = R('confetti'), cols = ['#e2bd62', '#f7dc92', '#c9313d', '#1f9a57', '#fff'];
+    for (let i = 0; i < n; i++) { const e = document.createElement('i'); e.style.left = Math.random() * 100 + '%'; e.style.background = cols[i % 5]; e.style.animationDuration = (1.6 + Math.random() * 1.4) + 's'; e.style.animationDelay = Math.random() * .4 + 's'; c.appendChild(e); setTimeout(() => e.remove(), 3600); }
+  }
+
+  /* sheet */
+  function openSheet() {
+    Sound.tap();
+    const P = PAYS[S.type], jpTxt = 'JACKPOT';
+    const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+    const s = document.createElement('div'); s.className = 'sheet';
+    s.innerHTML = `<div class="panel" role="dialog" aria-label="Rules and settings">
+      <button class="iconbtn close" data-x aria-label="Close">${ICON.close}</button>
+      <h2>Roulette Rush</h2>
+      <p>One layout, up to five wheels. Bet the table, choose how many wheels to play, then spin. Your layout rides on every wheel that's on, and each wheel pays on its own.</p>
+      <h4>SETTINGS</h4>
+      <div class="setrow"><span>Table</span><div class="seg" data-st><button data-t="eu" class="${S.type === 'eu' ? 'on' : ''}">0<small>EURO</small></button><button data-t="us" class="${S.type === 'us' ? 'on' : ''}">00<small>US</small></button></div></div>
+      <div class="setrow"><span>Sound</span><button class="ghost" data-snd>${S.sound ? 'ON' : 'OFF'}</button></div>
+      <div class="setrow"><span>Credits</span><button class="ghost" data-reset>RESET TO 5,000</button></div>
+      <h4>LAYOUT PAYS · PER WHEEL</h4>
+      <table>${row('Straight · 1 number', '35 : 1')}${row('Split · 2 numbers, tap the line between', '17 : 1')}${row('Street · 3 numbers, tap the row edge', '11 : 1')}${S.type === 'eu' ? row('Trio · 0-1-2 or 0-2-3', '11 : 1') : row('Trio · 0-1-2, 0-00-2, 00-2-3', '11 : 1')}${row('Corner · 4 numbers, tap where four meet', '8 : 1')}${S.type === 'eu' ? row('First four · 0-1-2-3', '8 : 1') : row('Top line · 0-00-1-2-3', '6 : 1')}${row('Six line · 6 numbers, tap the edge between rows', '5 : 1')}${row('Dozen · Column', '2 : 1')}${row('Red/Black · Odd/Even · 1–18/19–36', '1 : 1')}${row('Limits per spot', 'Inside 250 · Outside 1,000')}</table>
+      <p style="margin-top:8px">House edge: ${S.type === 'eu' ? '2.70% on every bet' : '5.26% on every bet except the top line, which is 7.89%'}.</p>
+      ${BONUS.map(b => `<h4>${b.name.toUpperCase()} CHIP</h4><p>${b.about} Bet once, covers all five wheels.</p><table>${P[b.id].map(r => row(r[0], r[1] === 'JP' ? jpTxt : fmt(r[1]) + ' : 1')).join('')}</table>`).join('')}
+      <p style="margin-top:8px">Bonus chips unlock when all five wheels are on. Highest hand pays.</p>
+      <h4>LAST SPINS</h4>
+      <div class="hist">${S.history.length ? S.history.map(r => `<div>${r.map((n, i) => n == null ? '<span class="res">–</span>' : `<span class="res ${color(n)}" title="Wheel ${i + 1}">${lab(n)}</span>`).join('')}</div>`).join('') : '<p>No spins yet.</p>'}</div>
+      <p style="margin-top:14px;font-size:11px">Prototype. Play credits only, no real money.</p></div>`;
+    root.appendChild(s);
+    const close = () => s.remove();
+    s.querySelector('[data-x]').onclick = close;
+    s.onclick = e => { if (e.target === s) close(); };
+    s.querySelectorAll('[data-st] button').forEach(b => b.onclick = () => { setType(b.dataset.t); close(); });
+    s.querySelector('[data-snd]').onclick = e => { toggleSound(); e.target.textContent = S.sound ? 'ON' : 'OFF'; };
+    s.querySelector('[data-reset]').onclick = () => { if (S.spinning) return; S.balance = 5000; S.bets = {}; S.props = { premium: 0, elite: 0, classic: 0 }; save(); render(); close(); toastInfo('Credits reset to 5,000'); };
+  }
+  function toggleSound() { S.sound = !S.sound; Sound.on = S.sound; Sound.init(); render(); save(); if (S.sound) Sound.tap(); }
+
+  /* wire */
+  qa('.prop').forEach(p => p.onclick = () => placeProp(p.dataset.prop));
+  qa('[data-r=chips] .chip').forEach(c => c.onclick = () => { Sound.init(); S.chip = +c.dataset.v; Sound.tap(); render(); });
+  [...R('type').children].forEach(b => b.onclick = () => setType(b.dataset.t));
+  R('spin').onclick = spin;
+  R('snd').onclick = toggleSound;
+  R('menu').onclick = openSheet;
+  R('undo').onclick = () => { if (!S.undo.length) return; const s = JSON.parse(S.undo.pop()); S.bets = s.bets; S.props = s.props; Sound.tap(); render(); };
+  R('clear').onclick = () => { snapshot(); S.bets = {}; S.props = { premium: 0, elite: 0, classic: 0 }; clearMarks(); Sound.tap(); render(); };
+  R('dbl').onclick = () => {
+    const nb = {}, np = {};
+    for (const k in S.bets) nb[k] = Math.min(S.bets[k] * 2, isOutside(T.D[k]) ? LIMIT.outside : LIMIT.inside);
+    for (const k in S.props) np[k] = Math.min(S.props[k] * 2, LIMIT.bonus);
+    if (sum(nb) * nActive() + sum(np) > S.balance) return toast('Not enough credits to double');
+    snapshot(); S.bets = nb; S.props = np; Sound.chip(25); render();
+  };
+  if (opts.keys !== false) document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !q('.sheet') && !e.target.closest('button,input')) { e.preventDefault(); spin(); }
+  });
+  buildRack(); buildLayout(); render();
+  return { state: S, spin };
+}
+
+return { EU_ORDER, US_ORDER, RED, WCOL, CHIPS, BONUS, PAYS, LIMIT, JP_SEED, ICON, LOGO, Sound, lab, color, fmt, chipClass, chipHTML, wheelSVG, buildDefs, buildTable, evalBonus, bonusOdds, mountGame };
+})();
+
+</script>
+<script>
+(() => {
+  const page = document.getElementById('page');
+  RR.mountGame(document.getElementById('app'));
+  function layout() {
+    const s = Math.min(1, (window.innerHeight - 8) / 868, (window.innerWidth - 8) / 414);
+    document.getElementById('phoneSlot').style.setProperty('--s', s.toFixed(4));
+  }
+  layout(); window.addEventListener('resize', layout);
+})();
+</script>
+</body>
+</html>
